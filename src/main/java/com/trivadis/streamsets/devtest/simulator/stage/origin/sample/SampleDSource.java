@@ -18,7 +18,6 @@ package com.trivadis.streamsets.devtest.simulator.stage.origin.sample;
 import com.codahale.metrics.Timer;
 import com.streamsets.pipeline.api.*;
 import com.streamsets.pipeline.api.base.BasePushSource;
-import com.streamsets.pipeline.api.impl.Utils;
 import com.streamsets.pipeline.api.lineage.EndPointType;
 import com.streamsets.pipeline.api.lineage.LineageEvent;
 import com.streamsets.pipeline.api.lineage.LineageEventType;
@@ -29,10 +28,10 @@ import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.file
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.format.CsvConfig;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.format.DataFormatType;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.format.InputDataFormatChooserValues;
+import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.DateUtil;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.EventTimeConfig;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.TimestampModeType;
 import com.trivadis.streamsets.sdc.csv.CsvParser;
-import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.RegexFileFilter;
 import org.apache.commons.io.filefilter.TrueFileFilter;
@@ -40,21 +39,14 @@ import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.sound.midi.Patch;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.Reader;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @GenerateResourceBundle
 @StageDef(
@@ -180,7 +172,6 @@ public class SampleDSource extends BasePushSource {
 
     private List<CsvParser> csvParsers = new ArrayList<CsvParser>();
     private BufferedDataStreamFileReader bufferedDataStream = null;
-    private Map<String, Object> recordHeaderAttr;
 
     @Override
     protected List<ConfigIssue> init() {
@@ -202,12 +193,12 @@ public class SampleDSource extends BasePushSource {
         numThreads = 1;
 
         try {
-            for (File file : files) {
-                csvParsers.add(createParser(new FileReader(file)));
-                recordHeaderAttr = generateHeaderAttrs(file);
-            }
-
-            bufferedDataStream = new BufferedDataStreamFileReader(getContext(), eventTimeConfig, csvConfig, csvParsers, 0, 10, 100);
+            bufferedDataStream = BufferedDataStreamFileReader.create()
+                    .withContext(getContext())
+                    .withConfig(eventTimeConfig, csvConfig)
+                    .withFiles(files)
+                    .withMinBufferSize(10)
+                    .withMaxBufferSize(100);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -225,46 +216,6 @@ public class SampleDSource extends BasePushSource {
         return numThreads;
     }
 
-    private CsvParser createParser(Reader reader) throws IOException {
-        CsvParser csvParser = null;
-
-        CSVFormat csvFormat = null;
-        switch (csvConfig.csvFileFormat) {
-            case CUSTOM:
-                csvFormat = CSVFormat.DEFAULT.withDelimiter(csvConfig.csvCustomDelimiter)
-                        .withEscape(csvConfig.csvCustomEscape)
-                        .withQuote(csvConfig.csvCustomQuote)
-                        .withIgnoreEmptyLines(csvConfig.csvIgnoreEmptyLines);
-
-                if (csvConfig.csvEnableComments) {
-                    csvFormat = csvFormat.withCommentMarker(csvConfig.csvCommentMarker);
-                }
-                break;
-            case MULTI_CHARACTER:
-                //
-                break;
-            default:
-                csvFormat = csvConfig.csvFileFormat.getFormat();
-                break;
-        }
-
-        switch (csvConfig.csvHeader) {
-            case USE_HEADER:
-            case IGNORE_HEADER:
-                csvFormat = csvFormat.withHeader((String[]) null).withSkipHeaderRecord(true);
-                break;
-            case NO_HEADER:
-                csvFormat = csvFormat.withHeader((String[]) null).withSkipHeaderRecord(false);
-                break;
-            default:
-                throw new RuntimeException(Utils.format("Unknown Header error: {}", csvConfig.csvHeader));
-        }
-        csvParser = new CsvParser(reader, csvFormat, 1000);
-
-        return csvParser;
-    }
-
-
     @Override
     public void produce(Map<String, String> offsets, int maxBatchSize) throws StageException {
         int batchSize = Math.min(this.batchSize, maxBatchSize);
@@ -276,10 +227,19 @@ public class SampleDSource extends BasePushSource {
         List<Future<Runnable>> futures = new ArrayList<>(numThreads);
 
         StageException propagateException = null;
-        long startTime = System.currentTimeMillis();
+
+        long startTimeMs = 0;
+        long deltaMs = 0;
+        long currentTimestampMs = System.currentTimeMillis();
+        if (this.eventTimeConfig.simulationStartNow) {
+            startTimeMs = currentTimestampMs;
+        } else {
+            startTimeMs = DateUtil.parseCustomFormat(eventTimeConfig.simulationStartTimestampDateFormat.getFormat(), eventTimeConfig.simulationStartTimestamp) * 1000;
+            deltaMs = currentTimestampMs - startTimeMs;
+        }
 
         try {
-            Future future = executorService.submit(new GeneratorRunnable( 1, bufferedDataStream, csvConfig, recordHeaderAttr, batchSize, startTime));
+            Future future = executorService.submit(new GeneratorRunnable( 1, bufferedDataStream, csvConfig, batchSize, startTimeMs, deltaMs));
             futures.add(future);
 
             // Wait for proper execution finish
@@ -296,32 +256,6 @@ public class SampleDSource extends BasePushSource {
             // Terminate executor that will also clear up threads that were created
             shutdownExecutorIfNeeded();
         }
-
-        /*
-        try {
-            // Run all the threads
-            int i = 0;
-            for (CsvParser csvParser : csvParsers) {
-                Future future = executorService.submit(new GeneratorRunnable(i + 1, bufferedDataStream, csvConfig, recordHeaderAttr, batchSize, startTime));
-                futures.add(future);
-                i++;
-            }
-
-            // Wait for proper execution finish
-            for (Future<Runnable> f : futures) {
-                try {
-                    f.get();
-                } catch (InterruptedException | ExecutionException e) {
-                    LOG.error("InterruptedException when attempting to wait for all runnables to complete, after context " +
-                            "was stopped: {}", e.getMessage(), e);
-                    Thread.currentThread().interrupt();
-                }
-            }
-        } finally {
-            // Terminate executor that will also clear up threads that were created
-            shutdownExecutorIfNeeded();
-        }
-        */
 
         if (propagateException != null) {
             throw propagateException;
@@ -342,33 +276,19 @@ public class SampleDSource extends BasePushSource {
         int threadId;
         private BufferedDataStreamFileReader bufferedDataStream = null;
         private long recordCount;
-        private long startTime;
+        private long startTimestampMs;
+        private long deltaMs;
         private List<Field> headers;
-        //        private CsvConfig csvConfig;
+
         private int batchSize;
-        //        private CSVIterator csvIterator = null;
-        private Map<String, Object> recordHeaderAttr = null;
 
-
-        public GeneratorRunnable(int threadId, BufferedDataStreamFileReader bufferedDataStream, CsvConfig csvConfig, Map<String, Object> recordHeaderAttr, int batchSize, long startTime) {
+        public GeneratorRunnable(int threadId, BufferedDataStreamFileReader bufferedDataStream, CsvConfig csvConfig, int batchSize, long startTimestampMs, long deltaMs) {
             this.threadId = threadId;
             this.bufferedDataStream = bufferedDataStream;
-//            this.csvConfig = csvConfig;
-            this.recordHeaderAttr = recordHeaderAttr;
             this.batchSize = batchSize;
-            this.startTime = startTime;
+            this.startTimestampMs = startTimestampMs;
+            this.deltaMs = deltaMs;
             this.recordCount = 0;
-/*
-            if (csvConfig.csvHeader != CsvHeader.NO_HEADER) {
-                String[] hs = bufferedDataStream.getHeaders();
-                if (csvConfig.csvHeader != CsvHeader.IGNORE_HEADER && hs != null) {
-                    headers = new ArrayList<>();
-                    for (String h : hs) {
-                        headers.add(Field.create(h));
-                    }
-                }
-            }
-*/
         }
 
         @Override
@@ -377,8 +297,6 @@ public class SampleDSource extends BasePushSource {
             Thread.currentThread().setName("DevSimulator" + threadId + "::" + getContext().getPipelineId());
 
             try {
-
-
                 boolean cont = true;
                 // Create new batch
                 BatchContext batchContext = null;
@@ -389,7 +307,7 @@ public class SampleDSource extends BasePushSource {
                             batchContext = getContext().startBatch();
                         }
 
-                        cont = produce(batchSize, batchContext, startTime);
+                        cont = produce(batchSize, batchContext, startTimestampMs, deltaMs);
 
                         // send the batch
                         getContext().processBatch(batchContext);
@@ -403,7 +321,7 @@ public class SampleDSource extends BasePushSource {
             }
         }
 
-        public boolean produce(int batchSize, BatchContext batchContext, long startTime) {
+        public boolean produce(int batchSize, BatchContext batchContext, long startTime, long deltaMs) {
             BatchMaker batchMaker = batchContext.getBatchMaker();
 
             int i = 0;
@@ -411,32 +329,32 @@ public class SampleDSource extends BasePushSource {
                 try {
                     List<Record> records = bufferedDataStream.pollFromBuffer();
                     for (Record record : records) {
-
-                        // nextLine[] is an array of values from the line
-                        // System.out.println(nextLine[0]  + "::" + nextLine[1]  + " etc...");
+                        long currentEventTimeMs = System.currentTimeMillis() - deltaMs;
 
                         if (record != null) {
-//                            LinkedHashMap<String, Field> map = new LinkedHashMap<>();
-
+                            long eventTimestampMs = 0;
                             if (record.has(eventTimeConfig.timestampField)) {
-                                long eventTime = record.get(eventTimeConfig.timestampField).getValueAsLong();
+                                long recordTimeMs = record.get(eventTimeConfig.timestampField).getValueAsLong();
                                 if (eventTimeConfig.timestampMode.equals(TimestampModeType.RELATIVE)) {
-                                    long absoluteEventTime = this.startTime + eventTime;
-                                    if (absoluteEventTime > System.currentTimeMillis()) {
+                                    eventTimestampMs = this.startTimestampMs + recordTimeMs;
+                                    if (eventTimestampMs > currentEventTimeMs) {
                                         try {
-                                            Thread.sleep(Math.max(absoluteEventTime - System.currentTimeMillis(), 0));
-                                            //Thread.sleep(Math.max(absoluteEventTime - System.currentTimeMillis(), 0));
+                                            Thread.sleep(Math.max(eventTimestampMs - currentEventTimeMs, 0));
+                                            //Thread.sleep(Math.max(eventTimestampMs - System.currentTimeMillis(), 0));
                                         } catch (InterruptedException e) {
                                             break;
                                         }
                                     }
                                 } else if (eventTimeConfig.timestampMode.equals(TimestampModeType.ABSOLUTE)) {
 
+                                } else if (eventTimeConfig.timestampMode.equals(TimestampModeType.ABSOLUTE_RELATIVE)) {
+
+                                } else if (eventTimeConfig.timestampMode.equals(TimestampModeType.FIXED)) {
+
                                 }
                             }
 
-                            record.set(eventTimeConfig.eventTimestampField, Field.create(System.currentTimeMillis()));
-                            setHeaders(record, recordHeaderAttr);
+                            record.set(eventTimeConfig.eventTimestampField, Field.create(eventTimestampMs));
 
                             batchMaker.addRecord(record);
                             i++;
@@ -444,8 +362,6 @@ public class SampleDSource extends BasePushSource {
                             return false;
                         }
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
                 } finally {
 
                 }
@@ -454,66 +370,6 @@ public class SampleDSource extends BasePushSource {
         }
 
     }
-/*
-    protected Record createRecord(PushSource.Context context, long offset, List<Field> headers, String[] columns) throws DataParserException {
-        Record record = context.createRecord("test" + "::" + offset);
-
-        // In case that the number of columns does not equal the number of expected columns from header, report the
-        // parsing error as recoverable issue - it's safe to continue reading the stream.
-        if (headers != null && columns.length > headers.size()) {
-            record.set(Field.create(Field.Type.MAP, ImmutableMap.builder()
-                    .put("columns", getListField(columns))
-                    .put("headers", Field.create(Field.Type.LIST, headers))
-                    .build()
-            ));
-
-            throw new RecoverableDataParserException(record, Errors.DEV_SIMULATOR_001, offset, columns.length, headers.size());
-        }
-
-        if (csvConfig.csvRecordType == CsvRecordType.LIST) {
-            List<Field> row = new ArrayList<>();
-            for (int i = 0; i < columns.length; i++) {
-                Map<String, Field> cell = new HashMap<>();
-                Field header = (headers != null) ? headers.get(i) : null;
-                if (header != null) {
-                    cell.put("header", header);
-                }
-                Field value = getField(columns[i]);
-                cell.put("value", value);
-                row.add(Field.create(cell));
-            }
-            record.set(Field.create(row));
-        } else {
-            LinkedHashMap<String, Field> listMap = new LinkedHashMap<>();
-            for (int i = 0; i < columns.length; i++) {
-                String key;
-                Field header = (headers != null) ? headers.get(i) : null;
-                if (header != null) {
-                    key = header.getValueAsString();
-                } else {
-                    key = Integer.toString(i);
-                }
-                listMap.put(key, getField(columns[i]));
-            }
-            record.set(Field.createListMap(listMap));
-        }
-
-        return record;
-    }
-*/
-
-    private Map<String, Object> generateHeaderAttrs(File file) throws IOException {
-        Map<String, Object> recordHeaderAttr = new HashMap<>();
-        recordHeaderAttr.put("file", file.getAbsolutePath());
-        recordHeaderAttr.put("filename", file.getName());
-        recordHeaderAttr.put("baseDir", filesDirectory);
-        return recordHeaderAttr;
-    }
-
-    private void setHeaders(Record record, Map<String, Object> recordHeaderAttr) throws IOException {
-        recordHeaderAttr.forEach((k, v) -> record.getHeader().setAttribute(k, v.toString()));
-    }
-
 
     private Collection getAllFilesThatMatchFilenameExtension(String directoryName, String pattern, boolean includeSubdirectories, PathMatcherMode pathMatcherMode) {
         File directory = new File(directoryName);

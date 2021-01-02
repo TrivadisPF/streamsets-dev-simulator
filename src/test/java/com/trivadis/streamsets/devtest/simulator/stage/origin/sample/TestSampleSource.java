@@ -19,9 +19,11 @@ import _ss_com.streamsets.datacollector.util.Configuration;
 import com.streamsets.pipeline.api.Record;
 import com.streamsets.pipeline.sdk.PushSourceRunner;
 import com.streamsets.pipeline.sdk.StageRunner;
+import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.files.PathMatcherMode;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.format.CsvConfig;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.format.CsvHeader;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.format.DataFormatType;
+import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.DateFormat;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.EventTimeConfig;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.TimestampModeType;
 import org.junit.Test;
@@ -47,7 +49,9 @@ public class TestSampleSource {
     eventTimeConfig.timestampField = "/Timestamp";
     eventTimeConfig.timestampMode = TimestampModeType.RELATIVE;
     eventTimeConfig.eventTimestampField = "/EventTimestamp";
-    eventTimeConfig.matchStartTimestamp = "now";
+    eventTimeConfig.simulationStartNow = false;
+    eventTimeConfig.simulationStartTimestamp = "16:00:00";
+    eventTimeConfig.simulationStartTimestampDateFormat = DateFormat.HH_MM_SS;
 
     SampleDSource origin = new SampleDSource();
     origin.csvConfig = csvConfig;
@@ -57,6 +61,9 @@ public class TestSampleSource {
         .addConfiguration("fileNamePattern", ".+.csv")
             .addConfiguration("batchSize", 10)
             .addConfiguration("inputDataFormat", DataFormatType.AS_DELIMITED)
+            .addConfiguration("includeSubdirectories", true)
+            .addConfiguration("pathMatcherMode", PathMatcherMode.REGEX)
+            .addConfiguration("useMultiRecordType", false)
             .addConfiguration("filesDirectory", "/Users/gus/workspace/git/trivadispf/streamsets-dev-simulator/src/test/resources/data/ball")
         .addOutputLane("lane")
         .build();
@@ -75,6 +82,8 @@ public class TestSampleSource {
         });
         runner.waitOnProduce();
         System.out.println(records);
+        System.out.println(records.get(0).getHeader().getAttribute("filename"));
+        System.out.println(records.get(0).getHeader().getAttribute("baseDir"));
 
     } finally {
       runner.runDestroy();

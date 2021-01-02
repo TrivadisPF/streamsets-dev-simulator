@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import com.streamsets.pipeline.api.Field;
 import com.streamsets.pipeline.api.PushSource;
 import com.streamsets.pipeline.api.Record;
+import com.streamsets.pipeline.api.impl.Utils;
 import com.streamsets.pipeline.api.service.dataformats.DataParserException;
 import com.streamsets.pipeline.api.service.dataformats.RecoverableDataParserException;
 import com.trivadis.streamsets.devtest.simulator.stage.lib.sample.Errors;
@@ -13,8 +14,12 @@ import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.form
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.format.CsvRecordType;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.EventTimeConfig;
 import com.trivadis.streamsets.sdc.csv.CsvParser;
+import org.apache.commons.csv.CSVFormat;
 
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
 import java.util.*;
 
 public class BufferedDataStreamFileReader {
@@ -22,22 +27,22 @@ public class BufferedDataStreamFileReader {
     /**
      * The CSV Config object
      */
-    private final CsvConfig csvConfig;
+    private CsvConfig csvConfig;
 
     /**
      * The Event Time Config object
      */
-    private final EventTimeConfig eventTimeConfig;
+    private EventTimeConfig eventTimeConfig;
 
     /**
      * Minimal number of elements in the buffer (if the end of the file is not reached yet)
      */
-    private final int minBufferSize;
+    private int minBufferSize;
 
     /**
      * Maximal number of elements in the buffer
      */
-    private final int maxBufferSize;
+    private int maxBufferSize;
 
     /**
      * Reflects if the end of the file is already reached
@@ -49,6 +54,10 @@ public class BufferedDataStreamFileReader {
      */
     private List<CsvParser> csvParsers = new ArrayList<>();
 
+    /**
+     * Record Header Attributes
+     */
+    private List<Map<String, Object>> recordHeaderAttrList = new ArrayList<>();
 
     /**
      * Buffer storing prefetched objects
@@ -124,32 +133,101 @@ public class BufferedDataStreamFileReader {
         return Field.create(Field.Type.STRING, value);
     }
 
-    public BufferedDataStreamFileReader(PushSource.Context context, EventTimeConfig eventTimeConfig, CsvConfig csvConfig, CsvParser parser, int timestampPosition, int minBufferSize, int maxBufferSize) throws IOException {
-
-        buffer = Collections.synchronizedNavigableMap(new TreeMap<>());
-
-        this.context = context;
-        this.csvConfig = csvConfig;
-        this.eventTimeConfig = eventTimeConfig;
-        this.csvParsers.add(parser);
-        this.minBufferSize = minBufferSize;
-        this.maxBufferSize = maxBufferSize;
-        this.timestampPosition = timestampPosition;
+    /**
+     * Set headers to a record
+     * @param record
+     * @param recordHeaderAttr
+     * @throws IOException
+     */
+    private void setHeaders(Record record, Map<String, Object> recordHeaderAttr) throws IOException {
+        recordHeaderAttr.forEach((k, v) -> record.getHeader().setAttribute(k, v.toString()));
     }
 
-    public BufferedDataStreamFileReader(PushSource.Context context, EventTimeConfig eventTimeConfig, CsvConfig csvConfig, List<CsvParser> parsers, int timestampPosition, int minBufferSize, int maxBufferSize) throws IOException {
-
-        buffer = Collections.synchronizedNavigableMap(new TreeMap<>());
-
-        this.context = context;
-        this.csvConfig = csvConfig;
-        this.eventTimeConfig = eventTimeConfig;
-        this.csvParsers = parsers;
-        this.minBufferSize = minBufferSize;
-        this.maxBufferSize = maxBufferSize;
-        this.timestampPosition = timestampPosition;
+    private Map<String, Object> generateHeaderAttrs(File file) throws IOException {
+        Map<String, Object> recordHeaderAttr = new HashMap<>();
+        recordHeaderAttr.put("file", file.getAbsolutePath());
+        recordHeaderAttr.put("filename", file.getName());
+        recordHeaderAttr.put("baseDir", file.getParent()); //filesDirectory);
+        return recordHeaderAttr;
     }
 
+    private CsvParser createParser(Reader reader) throws IOException {
+        CsvParser csvParser = null;
+
+        CSVFormat csvFormat = null;
+        switch (csvConfig.csvFileFormat) {
+            case CUSTOM:
+                csvFormat = CSVFormat.DEFAULT.withDelimiter(csvConfig.csvCustomDelimiter)
+                        .withEscape(csvConfig.csvCustomEscape)
+                        .withQuote(csvConfig.csvCustomQuote)
+                        .withIgnoreEmptyLines(csvConfig.csvIgnoreEmptyLines);
+
+                if (csvConfig.csvEnableComments) {
+                    csvFormat = csvFormat.withCommentMarker(csvConfig.csvCommentMarker);
+                }
+                break;
+            case MULTI_CHARACTER:
+                //
+                break;
+            default:
+                csvFormat = csvConfig.csvFileFormat.getFormat();
+                break;
+        }
+
+        switch (csvConfig.csvHeader) {
+            case USE_HEADER:
+            case IGNORE_HEADER:
+                csvFormat = csvFormat.withHeader((String[]) null).withSkipHeaderRecord(true);
+                break;
+            case NO_HEADER:
+                csvFormat = csvFormat.withHeader((String[]) null).withSkipHeaderRecord(false);
+                break;
+            default:
+                throw new RuntimeException(Utils.format("Unknown Header error: {}", csvConfig.csvHeader));
+        }
+        csvParser = new CsvParser(reader, csvFormat, 1000);
+
+        return csvParser;
+    }
+
+    private BufferedDataStreamFileReader() throws IOException {
+        buffer = Collections.synchronizedNavigableMap(new TreeMap<>());
+        this.minBufferSize = 10;
+        this.maxBufferSize = 100;
+    }
+
+    public static BufferedDataStreamFileReader create() throws IOException {
+        return new BufferedDataStreamFileReader();
+    }
+
+    public BufferedDataStreamFileReader withContext(PushSource.Context context) {
+        this.context = context;
+        return this;
+    }
+
+    public BufferedDataStreamFileReader withConfig(EventTimeConfig eventTimeConfig, CsvConfig csvConfig) {
+        this.eventTimeConfig = eventTimeConfig;
+        this.csvConfig = csvConfig;
+        return this;
+    }
+
+    public BufferedDataStreamFileReader withFiles(Collection<File> files) throws IOException {
+        for (File file : files) {
+            csvParsers.add(createParser(new FileReader(file)));
+            recordHeaderAttrList.add(generateHeaderAttrs(file));
+        }
+        return this;
+    }
+
+    public BufferedDataStreamFileReader withMinBufferSize (int minBufferSize) {
+        this.minBufferSize = minBufferSize;
+        return this;
+    }
+
+    public BufferedDataStreamFileReader withMaxBufferSize (int maxBufferSize) {
+        this.maxBufferSize = maxBufferSize;
+        return this;
+    }
 
     public List<Field> getHeaders() throws IOException {
         List<Field> headers = null;
@@ -166,10 +244,8 @@ public class BufferedDataStreamFileReader {
     }
 
     public void fillBuffer() {
-
         if (!this.fileEnd && this.buffer.size() < this.maxBufferSize) {
             String[] line;
-
             try {
                 while (this.buffer.size() < this.maxBufferSize) {
                     int actualParser = recordCount % csvParsers.size();
@@ -180,6 +256,8 @@ public class BufferedDataStreamFileReader {
                         return;
                     } else {
                         Record record = createRecord(context, 1, getHeaders(), line);
+                        setHeaders(record, recordHeaderAttrList.get(actualParser));
+
                         if (!record.has(eventTimeConfig.timestampField)) {
                             throw new RuntimeException("record does not contain field: " +  eventTimeConfig.timestampField + " -> " + record);
                         }
@@ -194,7 +272,6 @@ public class BufferedDataStreamFileReader {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
         }
     }
 
