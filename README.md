@@ -1,12 +1,14 @@
 # Dev Simulator Origin
 
+Supported pipeline types: **Data Collector**
+
 The Dev Simulator Origin ...
 
 ## File Name Pattern and Mode
 
 Use a file name pattern to define the files that the Directory origin processes. You can use either a glob pattern or a regular expression to define the file name pattern.
 
-The Directory origin processes files based on the file name pattern mode, file name pattern, and specified directory. For example, if you specify a /logs/weblog/ directory, glob mode, and *.json as the file name pattern, the origin processes all files with the json extension in the /logs/weblog/ directory.
+The Directory origin processes files based on the file name pattern mode, file name pattern, and specified directory. For example, if you specify a `/logs/weblog/` directory, glob mode, and *.json as the file name pattern, the origin processes all files with the json extension in the /logs/weblog/ directory.
 
 The origin processes files in order based on the specified read order.
 
@@ -76,7 +78,7 @@ Generates a record for each delimited line. You can use the following delimited 
   * **PostgreSQL Text** - PostgreSQL text file.
   * **Custom** - File that uses user-defined delimiter, escape, and quote characters.
   * **Multi Character Delimited** - File that uses multiple user-defined characters to delimit fields and lines, and single user-defined escape and quote characters.
-  * 
+ 
 You can use a list or list-map root field type for delimited data, and optionally include field names from a header line, when available. For more information about the root field types, see Delimited Data Root Field Type.
 
 When using a header line, you can enable handling records with additional columns. The additional columns are named using a custom prefix and integers in sequential increasing order, such as _extra_1, _extra_2. When you disallow additional columns, records that include additional columns are sent to error.
@@ -117,10 +119,52 @@ On Record Error  | Error record handling for the stage
 File Property | Description
 ------------- | -------------
 Files Directory  | A directory local to Data Collector where source files are stored. Enter an absolute path.
-File Name Pattern  | Pattern of the file names to process. Use glob patterns or regular expressions based on the specified file name pattern mode.
-File Name Pattern Mode  | Syntax of the file name pattern, either **Glob** or **Regular Expression**.
+Include Subdirectories  | Reads files in any subdirectory of the specified file directory. 
+File Name Pattern  | Pattern of the file names to process. Use wildcard patterns or regular expressions based on the specified file name pattern mode.
+Multiple Record Types | Enables handling different message types on the Multi Record Types tab
+Batch Size | no used 
+File Name Pattern Mode | Syntax of the file name pattern, either **Wildcard** or **Regular Expression**
 
-3. On the 
+3. On the **Event Time** tab, configure the following properties:
 
+Event Time Property | Description
+------------- | -------------
+Timestamp Mode  | 
+Timestamp Field  | 
+Timestamp Format  | 
+Event Timestamp Output Field | 
+Simulation Start Time is Now | 
+Simulation Start Timestamp | 
+Date Format | Format of the date, datetime, or time data. Select the format to use or create a custom format.
+Other Date Format | Use to enter a custom date format. For more information about creating a custom date format, see the [Oracle Java documentation](https://docs.oracle.com/javase/tutorial/i18n/format/simpleDateFormat.html).
 
+3. On the **Data Format** tab, configure the following properties:
 
+Date Format Property | Description
+------------- | -------------
+Timestamp Mode  | 
+Timestamp Field  | 
+Timestamp Format  | 
+Event Timestamp Output Field | 
+Simulation Start Time is Now | 
+Simulation Start Timestamp | 
+Date Format | 
+Other Date Format | 
+
+3. On the **Multi Record Types** tab, configure the following properties:
+
+Multi Record Types Property | Description
+------------- | -------------
+
+3. On the **Data Format** tab, configure the following properties:
+
+Data Fomrmat Property | Description
+------------- | -------------
+Input Data Format | Delimiter format type. Use one of the following options. 
+Delimiter Format Type | Delimiter character for a custom delimiter format. Select one of the available options or use Other to enter a custom character.
+Header Line | Indicates whether a file contains a header line, and whether to use the header line.
+Lines to Skip | Number of lines to skip before reading data.
+Root Field Type | Root field type to use: <br/><br/>**List-Map** - Generates an indexed list of data. Enables you to use standard functions to process data. Use for new pipelines. <br/>**List** - Generates a record with an indexed list with a map for header and value. Requires the use of delimited data functions to process data. Use only to maintain pipelines created before 1.1.0.
+Parse NULLs | Replaces the specified string constant with null values. 
+Charset |  Character encoding of the files to be processed.
+Ignore Control Characters |  Removes all ASCII control characters except for the tab, line feed, and carriage return characters.
