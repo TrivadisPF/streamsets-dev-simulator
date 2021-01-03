@@ -14,7 +14,7 @@ The origin can generate events for an event stream. For more information about d
 
 ## File Name Pattern and Mode
 
-Use a file name pattern to define the files that the Directory origin processes. You can use either a glob pattern or a regular expression to define the file name pattern.
+Use a file name pattern to define the files that the Dev Simulator origin processes. You can use either a glob pattern or a regular expression to define the file name pattern.
 
 The Dev Simulator origin processes files based on the file name pattern mode, file name pattern, and specified directory. For example, if you specify a `/logs/weblog/` directory, wildcard mode, and `*.json` as the file name pattern, the origin processes all files with the json extension in the `/logs/weblog/` directory.
 
@@ -32,7 +32,7 @@ The Dev Simulator origin creates record header attributes that include informati
 
 You can use the `record:attribute` or `record:attributeOrDefault` functions to access the information in the attributes. For more information about working with record header attributes, see Working with Header Attributes.
 
-The Directory origin creates the following record header attributes:
+The Dev Simulator origin creates the following record header attributes:
 
   * `baseDir` - Base directory containing the file where the record originated.
   * `filename` - Provides the name of the file where the record originated.
@@ -48,9 +48,9 @@ t.b.d.
 
 ## Buffer Limit and Error Handling
 
-The Directory origin passes each record to a buffer. The size of the buffer determines the maximum size of the record that can be processed. Decrease the buffer limit when memory on the Data Collector machine is limited. Increase the buffer limit to process larger records when memory is available.
+The Dev Simulator origin passes each record to a buffer. The size of the buffer determines the maximum size of the record that can be processed. Decrease the buffer limit when memory on the Data Collector machine is limited. Increase the buffer limit to process larger records when memory is available.
 
-When a record is larger than the specified limit, the Directory origin processes the source file based on the stage error handling:
+When a record is larger than the specified limit, the Dev Simulator origin processes the source file based on the stage error handling:
 
 **Discard**
 
@@ -71,9 +71,9 @@ The origin stops the pipeline and creates a message stating that a buffer overru
 
 ## Data Formats
 
-The Directory origin processes data differently based on the data format.
+The Dev Simulator origin processes data differently based on the data format.
 
-The Directory origin processes data formats as follows:
+The Dev Simulator origin processes data formats as follows:
 
 **Delimited** 
 
@@ -109,7 +109,7 @@ Not yet supported!
 
 Not yet supported!
 
-## Configuring a Dev Simultor Origin
+## Configuring a Dev Simulator Origin
 
 Configure a Dev Simulator origin to read data from files in a directory.
 
@@ -149,19 +149,6 @@ Simulation Start Timestamp | a fixed simiulation start time or datetime. If no d
 Simulation Start Timestamp Format | Format of the simulation start specified by the `Simulation Start Timestamp` property.
 Simulation Start Other Timestamp Format | Use to enter a custom date format. For more information about creating a custom date format, see the [Oracle Java documentation](https://docs.oracle.com/javase/tutorial/i18n/format/simpleDateFormat.html).
 Speedup Factor | Speedup value for the match simulation (1.0 = normal speed, 0.1 = 10 times slower, 10.0 = 10 times faster)
-
-3. On the **Data Format** tab, configure the following properties:
-
-Date Format Property | Description
-------------- | -------------
-Time Mode  | 
-Time Field  | 
-Time Format  | 
-Event Timestamp Output Field | 
-Simulation Start Time is Now | 
-Simulation Start Timestamp | 
-Date Format | 
-Other Date Format | 
 
 3. On the **Multi Record Types** tab, configure the following properties:
 
