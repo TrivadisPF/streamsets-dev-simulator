@@ -23,7 +23,7 @@ import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.file
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.format.CsvConfig;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.format.CsvHeader;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.format.DataFormatType;
-import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.DateFormat;
+import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.SimulationStartDateFormat;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.EventTimeConfig;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.TimestampModeType;
 import org.junit.Test;
@@ -48,18 +48,20 @@ public class TestSampleSource {
     EventTimeConfig eventTimeConfig = new EventTimeConfig();
     eventTimeConfig.timestampField = "/Timestamp";
     eventTimeConfig.timestampMode = TimestampModeType.RELATIVE;
-    eventTimeConfig.eventTimestampField = "/EventTimestamp";
-    eventTimeConfig.simulationStartNow = false;
+    eventTimeConfig.eventTimestampOutputField = "/EventTimestamp";
+    eventTimeConfig.simulationStartNow = true;
     eventTimeConfig.simulationStartTimestamp = "16:00:00";
-    eventTimeConfig.simulationStartTimestampDateFormat = DateFormat.HH_MM_SS;
+    eventTimeConfig.simulationStartTimestampDateFormat = SimulationStartDateFormat.HH_MM_SS;
+    eventTimeConfig.speedup = 1.0;
 
-    SampleDSource origin = new SampleDSource();
+    DevSimulatorDSource origin = new DevSimulatorDSource();
     origin.csvConfig = csvConfig;
     origin.eventTimeConfig = eventTimeConfig;
 
-    runner = new PushSourceRunner.Builder(SampleDSource.class, origin)
+    runner = new PushSourceRunner.Builder(DevSimulatorDSource.class, origin)
         .addConfiguration("fileNamePattern", ".+.csv")
-            .addConfiguration("batchSize", 10)
+            .addConfiguration("minBufferSize", 10)
+            .addConfiguration("maxBufferSize", 100)
             .addConfiguration("inputDataFormat", DataFormatType.AS_DELIMITED)
             .addConfiguration("includeSubdirectories", true)
             .addConfiguration("pathMatcherMode", PathMatcherMode.REGEX)

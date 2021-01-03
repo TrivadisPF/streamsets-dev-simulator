@@ -28,6 +28,7 @@ import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.file
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.format.CsvConfig;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.format.DataFormatType;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.format.InputDataFormatChooserValues;
+import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.multitype.MultiTypeConfig;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.DateUtil;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.EventTimeConfig;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.TimestampModeType;
@@ -60,9 +61,9 @@ import java.util.stream.Collectors;
         onlineHelpRefUrl = ""
 )
 @ConfigGroups(value = Groups.class)
-public class SampleDSource extends BasePushSource {
+public class DevSimulatorDSource extends BasePushSource {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SampleDSource.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DevSimulatorDSource.class);
 
     private final int EVENT_VERSION = 1;
 
@@ -116,18 +117,33 @@ public class SampleDSource extends BasePushSource {
     @ValueChooserModel(PathMatcherModeChooserValues.class)
     public PathMatcherMode pathMatcherMode = PathMatcherMode.WILDCARD;
 
+
     @ConfigDef(
             required = true,
             type = ConfigDef.Type.NUMBER,
-            defaultValue = "1000",
-            label = "Batch size",
+            defaultValue = "10",
+            label = "Minimum Buffer size",
             description = "Number of records that will be generated for single batch.",
             min = 1,
             max = Integer.MAX_VALUE,
             displayMode = ConfigDef.DisplayMode.ADVANCED,
             group = "FILES"
     )
-    public int batchSize;
+    public int minBufferSize = 10;
+
+    @ConfigDef(
+            required = true,
+            type = ConfigDef.Type.NUMBER,
+            defaultValue = "100",
+            label = "Maximum Buffer size",
+            description = "Number of records that will be generated for single batch.",
+            min = 1,
+            max = Integer.MAX_VALUE,
+            displayMode = ConfigDef.DisplayMode.ADVANCED,
+            group = "FILES"
+    )
+    public int maxBufferSize = 100;
+
 
     @ValueChooserModel(InputDataFormatChooserValues.class)
     @ConfigDef(
@@ -153,6 +169,9 @@ public class SampleDSource extends BasePushSource {
     public boolean useMultiRecordType;
 
     @ConfigDefBean()
+    public MultiTypeConfig multiTypeConfig;
+
+    @ConfigDefBean()
     public EventTimeConfig eventTimeConfig;
 
     @ConfigDefBean()
@@ -163,6 +182,8 @@ public class SampleDSource extends BasePushSource {
      */
     private long counter;
     private long maxWaitTime;
+
+    int batchSize = 1;
 
     public int numThreads;
 
@@ -197,8 +218,8 @@ public class SampleDSource extends BasePushSource {
                     .withContext(getContext())
                     .withConfig(eventTimeConfig, csvConfig)
                     .withFiles(files)
-                    .withMinBufferSize(10)
-                    .withMaxBufferSize(100);
+                    .withMinBufferSize(minBufferSize)
+                    .withMaxBufferSize(maxBufferSize);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -279,6 +300,7 @@ public class SampleDSource extends BasePushSource {
         private long startTimestampMs;
         private long deltaMs;
         private List<Field> headers;
+        private long macheinStartTimestampMs;
 
         private int batchSize;
 
@@ -295,6 +317,8 @@ public class SampleDSource extends BasePushSource {
         public void run() {
             String oldThreadName = Thread.currentThread().getName();
             Thread.currentThread().setName("DevSimulator" + threadId + "::" + getContext().getPipelineId());
+
+            macheinStartTimestampMs = System.currentTimeMillis();
 
             try {
                 boolean cont = true;
@@ -329,7 +353,7 @@ public class SampleDSource extends BasePushSource {
                 try {
                     List<Record> records = bufferedDataStream.pollFromBuffer();
                     for (Record record : records) {
-                        long currentEventTimeMs = System.currentTimeMillis() - deltaMs;
+                        long currentEventTimeMs = TimeUtil.generateTimestamp(System.currentTimeMillis(), this.macheinStartTimestampMs, this.startTimestampMs, eventTimeConfig.speedup);
 
                         if (record != null) {
                             long eventTimestampMs = 0;
@@ -354,7 +378,7 @@ public class SampleDSource extends BasePushSource {
                                 }
                             }
 
-                            record.set(eventTimeConfig.eventTimestampField, Field.create(eventTimestampMs));
+                            record.set(eventTimeConfig.eventTimestampOutputField, Field.create(eventTimestampMs));
 
                             batchMaker.addRecord(record);
                             i++;

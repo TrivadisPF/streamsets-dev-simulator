@@ -11,8 +11,8 @@ public class EventTimeConfig {
             type = ConfigDef.Type.MODEL,
             defaultValue = "RELATIVE",
             label = "Timestamp Mode",
+            description = "How to retrieve the timestamp of the message.",
             displayPosition = 20,
-            description = "The timestamp mode",
             displayMode = ConfigDef.DisplayMode.BASIC,
             group = "EVENT_TIME"
     )
@@ -24,8 +24,8 @@ public class EventTimeConfig {
             type = ConfigDef.Type.MODEL,
             defaultValue = "",
             label = "Timestamp Field",
-            displayPosition = 30,
             description = "Field to use as the timestamp.",
+            displayPosition = 30,
             displayMode = ConfigDef.DisplayMode.BASIC,
             group = "EVENT_TIME",
             dependsOn = "timestampMode",
@@ -35,43 +35,45 @@ public class EventTimeConfig {
     public String timestampField;
 
     @ConfigDef(
-            required = false,
-            type = ConfigDef.Type.STRING,
-            defaultValue = "",
-            label = "Timestamp Format (if not yet in millisecond)",
-            displayPosition = 35,
-            description = "Timestamp Format if it is not yet an epoc in millisecond.",
-            displayMode = ConfigDef.DisplayMode.BASIC,
-            group = "EVENT_TIME"
-    )
-    @FieldSelectorModel(singleValued = true)
-    public String timestampFormat = null;
-
-    @ConfigDef(
             required = true,
             type = ConfigDef.Type.NUMBER,
             defaultValue = "",
-            label = "Fixed Delay in milliseconds",
+            label = "Fixed Time Delta (ms)",
+            description = "A fixed Time Delta in milliseconds between each message.",
             displayPosition = 30,
-            description = "Field to use as the timestamp.",
             displayMode = ConfigDef.DisplayMode.BASIC,
             group = "EVENT_TIME",
             dependsOn = "timestampMode",
-            triggeredByValue = "FIXED"
+            triggeredByValue = {"FIXED"}
     )
-    public Integer fixedDelayInMs;
+    public Long fixedTimeDeltaMs;
+
+    @ConfigDef(
+            required = false,
+            type = ConfigDef.Type.MODEL,
+            defaultValue="EPOCH_MS",
+            label = "Timestamp Format",
+            description="Select or enter any valid date or datetime format",
+            displayPosition = 35,
+            displayMode = ConfigDef.DisplayMode.BASIC,
+            group = "EVENT_TIME",
+            dependsOn = "timestampMode",
+            triggeredByValue = {"ABSOLUTE","RELATIVE","ABSOLUTE_RELATIVE"}
+    )
+    @ValueChooserModel(TimestampDateFormatChooserValues.class)
+    public TimestampDateFormat timestampDateFormat = TimestampDateFormat.EPOCH_MS;
 
     @ConfigDef(
             required = true,
             type = ConfigDef.Type.STRING,
             defaultValue = "/EventTimestamp",
             label = "Event Timestamp Output Field",
+            description = "Name of the field in the record to hold the calculated event timestamp.",
             displayPosition = 40,
-            description = "The name of the field holding the event timestamp calculated from the starting time plus the value from the record.",
             displayMode = ConfigDef.DisplayMode.ADVANCED,
             group = "EVENT_TIME"
     )
-    public String eventTimestampField;
+    public String eventTimestampOutputField;
 
     @ConfigDef(
             required = true,
@@ -105,7 +107,7 @@ public class EventTimeConfig {
             required = false,
             type = ConfigDef.Type.MODEL,
             defaultValue="HH_MM_SS",
-            label = "Date Format",
+            label = "Simulation Start Timestamp Format",
             description="Select or enter any valid date or datetime format",
             displayPosition = 50,
             displayMode = ConfigDef.DisplayMode.ADVANCED,
@@ -113,20 +115,31 @@ public class EventTimeConfig {
             dependsOn = "simulationStartNow",
             triggeredByValue = {"false"}
     )
-    @ValueChooserModel(DateFormatChooserValues.class)
-    public DateFormat simulationStartTimestampDateFormat;
+    @ValueChooserModel(SimulationStartDateFormatChooserValues.class)
+    public SimulationStartDateFormat simulationStartTimestampDateFormat = SimulationStartDateFormat.HH_MM_SS;
 
     @ConfigDef(
             required = true,
             type = ConfigDef.Type.STRING,
             defaultValue = "",
-            label = "Other Date Format",
+            label = "Other Simulation Start Timestamp Format",
             displayPosition = 55,
             displayMode = ConfigDef.DisplayMode.ADVANCED,
-            dependsOn = "simulationStartTimestampDateFormat",
             group = "EVENT_TIME",
+            dependsOn = "simulationStartTimestampDateFormat",
             triggeredByValue = "OTHER"
     )
     public String simulationStartTimestampDateOtherDateFormat;
 
+    @ConfigDef(
+            required = false,
+            type = ConfigDef.Type.NUMBER,
+            defaultValue = "1",
+            label = "Speedup Factor",
+            description = "Speedup value for the match simulation (1.0 = normal speed, 0.1 = 10 times slower, 10.0 = 10 times faster).",
+            displayPosition = 60,
+            displayMode = ConfigDef.DisplayMode.ADVANCED,
+            group = "EVENT_TIME"
+    )
+    public Double speedup;
 }
