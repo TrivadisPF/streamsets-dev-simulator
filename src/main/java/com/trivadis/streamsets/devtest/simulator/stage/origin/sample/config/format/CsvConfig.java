@@ -14,7 +14,7 @@ public class CsvConfig {
             displayPosition = 310,
             displayMode = ConfigDef.DisplayMode.BASIC,
             group = "DATA_FORMAT",
-            dependsOn = "inputDataFormat^",
+            dependsOn = "^basicConfig.inputDataFormat",
             triggeredByValue = "AS_DELIMITED"
     )
     @ValueChooserModel(CsvModeChooserValues.class)
@@ -29,7 +29,7 @@ public class CsvConfig {
             displayPosition = 380,
             displayMode = ConfigDef.DisplayMode.BASIC,
             group = "DATA_FORMAT",
-            dependsOn = "inputDataFormat^",
+            dependsOn = "^basicConfig.inputDataFormat",
             triggeredByValue = "AS_DELIMITED"
     )
     @ValueChooserModel(CsvHeaderChooserValues.class)
@@ -128,7 +128,7 @@ public class CsvConfig {
             displayPosition = 432,
             displayMode = ConfigDef.DisplayMode.ADVANCED,
             group = "DATA_FORMAT",
-            dependsOn = "inputDataFormat^",
+            dependsOn = "^basicConfig.inputDataFormat",
             triggeredByValue = "AS_DELIMITED"
     )
     @ValueChooserModel(CsvRecordTypeChooserValues.class)
@@ -143,7 +143,7 @@ public class CsvConfig {
             displayPosition = 428,
             displayMode = ConfigDef.DisplayMode.BASIC,
             group = "DATA_FORMAT",
-            dependsOn = "inputDataFormat^",
+            dependsOn = "^basicConfig.inputDataFormat^",
             triggeredByValue = "AS_DELIMITED",
             min = 0
     )
@@ -159,7 +159,7 @@ public class CsvConfig {
             displayPosition = 436,
             displayMode = ConfigDef.DisplayMode.ADVANCED,
             group = "DATA_FORMAT",
-            dependsOn = "inputDataFormat^",
+            dependsOn = "^basicConfig.inputDataFormat",
             triggeredByValue = "AS_DELIMITED"
     )
     public boolean parseNull;
@@ -187,7 +187,7 @@ public class CsvConfig {
             displayPosition = 999,
             displayMode = ConfigDef.DisplayMode.ADVANCED,
             group = "DATA_FORMAT",
-            dependsOn = "inputDataFormat^",
+            dependsOn = "^basicConfig.inputDataFormat",
             triggeredByValue = { "AS_DELIMITED"}
     )
     @ValueChooserModel(CharsetChooserValues.class)
@@ -198,10 +198,10 @@ public class CsvConfig {
             type = ConfigDef.Type.BOOLEAN,
             defaultValue = "false",
             label = "Ignore Control Characters",
-            description = "Use only if required as it impacts reading performance",
-            dependsOn = "inputDataFormat^",
-            triggeredByValue = {"AS_DELIMITED"},
             displayPosition = 1000,
+            description = "Use only if required as it impacts reading performance",
+            dependsOn = "^basicConfig.inputDataFormat",
+            triggeredByValue = {"AS_DELIMITED"},
             displayMode = ConfigDef.DisplayMode.ADVANCED,
             group = "DATA_FORMAT"
     )

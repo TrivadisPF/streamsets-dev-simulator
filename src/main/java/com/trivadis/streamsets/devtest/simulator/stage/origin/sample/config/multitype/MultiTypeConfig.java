@@ -12,7 +12,7 @@ public class MultiTypeConfig {
             description = "The timestamp mode",
             displayMode = ConfigDef.DisplayMode.BASIC,
             group = "MULTI_RECORD_TYPES",
-            dependsOn = "useMultiRecordType^",
+            dependsOn = "^basicConfig.useMultiRecordType",
             triggeredByValue = "true"
     )
     public String messageType;

@@ -19,10 +19,12 @@ import _ss_com.streamsets.datacollector.util.Configuration;
 import com.streamsets.pipeline.api.Record;
 import com.streamsets.pipeline.sdk.PushSourceRunner;
 import com.streamsets.pipeline.sdk.StageRunner;
+import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.DevSimulatorConfig;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.files.PathMatcherMode;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.format.CsvConfig;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.format.CsvHeader;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.format.DataFormatType;
+import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.multitype.MultiTypeConfig;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.SimulationStartDateFormat;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.EventTimeConfig;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.TimestampModeType;
@@ -41,9 +43,20 @@ public class TestSampleSource {
   public void testOrigin() throws Exception {
     Configuration.setFileRefsBaseDir(new File("/Users/gus/workspace/git/trivadispf/streamsets-dev-simulator/src/test/resources"));
 
+    DevSimulatorConfig basicConfig = new DevSimulatorConfig();
+    basicConfig.fileNamePattern = ".+.csv";
+    basicConfig.minBufferSize = 10;
+    basicConfig.maxBufferSize = 100;
+    basicConfig.inputDataFormat = DataFormatType.AS_DELIMITED;
+    basicConfig.includeSubdirectories = true;
+    basicConfig.pathMatcherMode = PathMatcherMode.REGEX;
+    basicConfig.filesDirectory = "/Users/gus/workspace/git/trivadispf/streamsets-dev-simulator/src/test/resources/data/ball";
+
     CsvConfig csvConfig = new CsvConfig();
     csvConfig.csvCustomDelimiter = ',';
     csvConfig.csvHeader = CsvHeader.USE_HEADER;
+
+    MultiTypeConfig multiTypeConfig = new MultiTypeConfig();
 
     EventTimeConfig eventTimeConfig = new EventTimeConfig();
     eventTimeConfig.timestampField = "/Timestamp";
@@ -55,18 +68,12 @@ public class TestSampleSource {
     eventTimeConfig.speedup = 1.0;
 
     DevSimulatorDSource origin = new DevSimulatorDSource();
+    origin.basicConfig = basicConfig;
     origin.csvConfig = csvConfig;
     origin.eventTimeConfig = eventTimeConfig;
+    origin.multiTypeConfig = multiTypeConfig;
 
     runner = new PushSourceRunner.Builder(DevSimulatorDSource.class, origin)
-        .addConfiguration("fileNamePattern", ".+.csv")
-            .addConfiguration("minBufferSize", 10)
-            .addConfiguration("maxBufferSize", 100)
-            .addConfiguration("inputDataFormat", DataFormatType.AS_DELIMITED)
-            .addConfiguration("includeSubdirectories", true)
-            .addConfiguration("pathMatcherMode", PathMatcherMode.REGEX)
-            .addConfiguration("useMultiRecordType", false)
-            .addConfiguration("filesDirectory", "/Users/gus/workspace/git/trivadispf/streamsets-dev-simulator/src/test/resources/data/ball")
         .addOutputLane("lane")
         .build();
 
