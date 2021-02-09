@@ -143,7 +143,7 @@ public class CsvConfig {
             displayPosition = 428,
             displayMode = ConfigDef.DisplayMode.BASIC,
             group = "DATA_FORMAT",
-            dependsOn = "^basicConfig.inputDataFormat^",
+            dependsOn = "^basicConfig.inputDataFormat",
             triggeredByValue = "AS_DELIMITED",
             min = 0
     )
