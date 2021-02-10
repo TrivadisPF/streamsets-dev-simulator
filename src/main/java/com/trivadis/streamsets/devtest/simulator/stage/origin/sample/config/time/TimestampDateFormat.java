@@ -6,8 +6,6 @@ import com.streamsets.pipeline.api.Label;
 @GenerateResourceBundle
 public enum TimestampDateFormat implements Label {
 
-    EPOCH_S("ss", "EPOCH time in seconds"),
-    EPOCH_MS("ssSSS", "EPOCH time in milliseconds"),
     HH_MM("HH:mm", "HH:mm"),
     HH_MM_SS("HH:mm:ss", "HH:mm:ss"),
     YYYY_MM_DD_HH_MM_SS("yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd HH:mm:ss"),

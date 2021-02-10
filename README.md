@@ -141,6 +141,7 @@ Event Time Property | Description
 ------------- | -------------
 Timestamp Mode  | How to retrieve the timestamp of the message. Use:<br/><ul><li>**Relative** - the value of field specified in `Timestamp Field` is used as a time delta to calculate the new event timestamp from the previous one.<li>**Absolute** - the value of the field specified in `Timestamp Field` is directly used as the timestamp of the message. <li>**Absolute / Relative** - the value of the field specified in `Timestamp Field` is once used as the start event timestamp, and form there the field is used as the time delta.<li>**Fixed** - a fixed delta is used, specified by the `Fixed Time Delta` property.
 Timestamp Field  | the field which holds the timestamp
+Relative Time Resoultion  | Format of the time resoultion in the field specified by `Timestamp Field`. Used when `Timestamp Mode` is set to **Relative**
 Timestamp Format  | Format of the timestamp in the field specified by `Timestamp Field`. Used to convert a date or datetime into an Unix epoch time, if not already so.
 Fixed Time Delta (ms) | A fixed Time Delta in milliseconds between each message (event), used when `Timestamp Mode` is set to **Fixed**
 Event Timestamp Output Field | Name of the field in the record to hold the calculated event timestamp. You can specify an existing field or a new field. If the field does not exist, Dev Simulator creates the field.

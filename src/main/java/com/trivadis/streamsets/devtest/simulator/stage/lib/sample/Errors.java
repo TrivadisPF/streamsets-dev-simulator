@@ -22,6 +22,7 @@ import com.streamsets.pipeline.api.GenerateResourceBundle;
 public enum Errors implements ErrorCode {
 
   DEV_SIMULATOR_001("A configuration is invalid because: {}"),
+  DEV_SIMULATOR_002("Date cannot be parsed with format specified: {}"),
   DEV_SIMULATOR_027("Batch size greater than maximal batch size allowed in sdc.properties, maxBatchSize: {}"),
   ;
   ;

@@ -24,10 +24,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -45,6 +44,8 @@ public class DevSimulatorSource extends BasePushSource {
 
     //    private long counter;
     private long maxWaitTime;
+
+    private long startTimestampMs = 0;
 
     private Collection getAllFilesThatMatchFilenameExtension(String directoryName, String pattern, boolean includeSubdirectories, PathMatcherMode pathMatcherMode) {
         File directory = new File(directoryName);
@@ -112,14 +113,17 @@ public class DevSimulatorSource extends BasePushSource {
     @Override
     public void produce(Map<String, String> map, int i) throws StageException {
 
-        long startTimestampMs = 0;
-        long deltaMs = 0;
+        //long deltaMs = 0;
         long currentTimestampMs = System.currentTimeMillis();
-        if (this.eventTimeConfig.simulationStartNow) {
-            startTimestampMs = currentTimestampMs;
-        } else {
-            startTimestampMs = DateUtil.parseCustomFormat(eventTimeConfig.simulationStartTimestampDateFormat.getFormat(), eventTimeConfig.simulationStartTimestamp) * 1000;
-            deltaMs = currentTimestampMs - startTimestampMs;
+
+        // set the start timestamp and delta if RELATIVE timestamp mode
+        if (this.eventTimeConfig.timestampMode.equals(TimestampModeType.RELATIVE)) {
+            if (this.eventTimeConfig.simulationStartNow) {
+                startTimestampMs = currentTimestampMs;
+            } else {
+                startTimestampMs = DateUtil.parseCustomFormat(eventTimeConfig.simulationStartTimestampDateFormat.getFormat(), eventTimeConfig.simulationStartTimestamp) * 1000;
+                //deltaMs = currentTimestampMs - startTimestampMs;
+            }
         }
 
         long machineStartTimestampMs = System.currentTimeMillis();
@@ -135,7 +139,7 @@ public class DevSimulatorSource extends BasePushSource {
                         batchContext = getContext().startBatch();
                     }
 
-                    cont = produceRecords(batchContext, startTimestampMs, machineStartTimestampMs);
+                    cont = produceRecords(batchContext, machineStartTimestampMs);
 
                     // send the batch
                     getContext().processBatch(batchContext);
@@ -149,42 +153,47 @@ public class DevSimulatorSource extends BasePushSource {
 
     }
 
-    public boolean produceRecords(BatchContext batchContext, long startTimestampMs, long machineStartTimestampMs) {
+    public boolean produceRecords(BatchContext batchContext, long machineStartTimestampMs) {
         BatchMaker batchMaker = batchContext.getBatchMaker();
 
         try {
-            List<Record> records = bufferedDataStream.pollFromBuffer();
-            for (Record record : records) {
-                long currentEventTimeMs = TimeUtil.generateTimestamp(System.currentTimeMillis(), machineStartTimestampMs, startTimestampMs, eventTimeConfig.speedup);
+            Map.Entry<Long, List<Record>> timestampWithRecords = bufferedDataStream.pollFromBuffer();
+            if (timestampWithRecords != null) {
+                long recordTimeMs = timestampWithRecords.getKey();
+                if (startTimestampMs == 0) {
+                    startTimestampMs = recordTimeMs;
+                }
 
-                if (record != null) {
-                    long eventTimestampMs = 0;
-                    if (record.has(eventTimeConfig.timestampField)) {
-                        long recordTimeMs = record.get(eventTimeConfig.timestampField).getValueAsLong();
+                for (Record record : timestampWithRecords.getValue()) {
+                    long currentEventTimeMs = TimeUtil.generateTimestamp(System.currentTimeMillis(), machineStartTimestampMs, startTimestampMs, eventTimeConfig.speedup);
+                    if (record != null) {
+                        long eventTimestampMs = 0;
+
                         if (eventTimeConfig.timestampMode.equals(TimestampModeType.RELATIVE)) {
                             eventTimestampMs = startTimestampMs + recordTimeMs;
-                            if (eventTimestampMs > currentEventTimeMs) {
-                                try {
-                                    Thread.sleep(Math.max(eventTimestampMs - currentEventTimeMs, 0));
-                                    //Thread.sleep(Math.max(eventTimestampMs - System.currentTimeMillis(), 0));
-                                } catch (InterruptedException e) {
-                                    break;
-                                }
-                            }
                         } else if (eventTimeConfig.timestampMode.equals(TimestampModeType.ABSOLUTE)) {
-
+                            eventTimestampMs = recordTimeMs;
                         } else if (eventTimeConfig.timestampMode.equals(TimestampModeType.ABSOLUTE_RELATIVE)) {
 
                         } else if (eventTimeConfig.timestampMode.equals(TimestampModeType.FIXED)) {
 
                         }
+
+                        if (eventTimestampMs > currentEventTimeMs) {
+                            try {
+                                Thread.sleep(Math.max(eventTimestampMs - currentEventTimeMs, 0));
+                                //Thread.sleep(Math.max(eventTimestampMs - System.currentTimeMillis(), 0));
+                            } catch (InterruptedException e) {
+                                break;
+                            }
+                        }
+
+                        record.set(eventTimeConfig.eventTimestampOutputField, Field.create(eventTimestampMs));
+
+                        batchMaker.addRecord(record);
+                    } else {
+                        return false;
                     }
-
-                    record.set(eventTimeConfig.eventTimestampOutputField, Field.create(eventTimestampMs));
-
-                    batchMaker.addRecord(record);
-                } else {
-                    return false;
                 }
             }
         } finally {

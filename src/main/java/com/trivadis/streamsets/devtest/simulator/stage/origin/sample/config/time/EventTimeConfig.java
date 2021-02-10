@@ -1,8 +1,11 @@
 package com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time;
 
+import com.google.common.base.Preconditions;
 import com.streamsets.pipeline.api.ConfigDef;
 import com.streamsets.pipeline.api.FieldSelectorModel;
 import com.streamsets.pipeline.api.ValueChooserModel;
+
+import java.time.format.DateTimeFormatter;
 
 public class EventTimeConfig {
 
@@ -51,17 +54,45 @@ public class EventTimeConfig {
     @ConfigDef(
             required = false,
             type = ConfigDef.Type.MODEL,
-            defaultValue="EPOCH_MS",
-            label = "Timestamp Format",
-            description="Select or enter any valid date or datetime format",
+            defaultValue="MILLISECONDS",
+            label = "Relative Time Resolution",
+            description="Select the relative time resolution",
             displayPosition = 35,
             displayMode = ConfigDef.DisplayMode.BASIC,
             group = "EVENT_TIME",
             dependsOn = "timestampMode",
-            triggeredByValue = {"ABSOLUTE","RELATIVE","ABSOLUTE_RELATIVE"}
+            triggeredByValue = {"RELATIVE","ABSOLUTE_RELATIVE"}
+    )
+    @ValueChooserModel(RelativeTimeResolutionChooserValues.class)
+    public RelativeTimeResolution relativeTimeResolution = RelativeTimeResolution.MILLISECONDS;
+
+    @ConfigDef(
+            required = false,
+            type = ConfigDef.Type.MODEL,
+            defaultValue="",
+            label = "Timestamp Format",
+            description="Select or enter any valid date or datetime format",
+            displayPosition = 37,
+            displayMode = ConfigDef.DisplayMode.BASIC,
+            group = "EVENT_TIME",
+            dependsOn = "timestampMode",
+            triggeredByValue = {"ABSOLUTE","ABSOLUTE_RELATIVE"}
     )
     @ValueChooserModel(TimestampDateFormatChooserValues.class)
-    public TimestampDateFormat timestampDateFormat = TimestampDateFormat.EPOCH_MS;
+    public TimestampDateFormat timestampDateFormat;
+
+    @ConfigDef(
+            required = true,
+            type = ConfigDef.Type.STRING,
+            defaultValue = "",
+            label = "Other Date Format",
+            displayPosition = 39,
+            displayMode = ConfigDef.DisplayMode.BASIC,
+            dependsOn = "timestampDateFormat",
+            group = "EVENT_TIME",
+            triggeredByValue = "OTHER"
+    )
+    public String otherTimestampDateFormat;
 
     @ConfigDef(
             required = true,
@@ -142,4 +173,15 @@ public class EventTimeConfig {
             group = "EVENT_TIME"
     )
     public Double speedup;
+
+    /**
+     * Return configured date mask.
+     */
+    public String getDateMask() {
+        if (timestampDateFormat != null)
+            return timestampDateFormat != TimestampDateFormat.OTHER ? timestampDateFormat.getFormat() : otherTimestampDateFormat;
+        else
+            return null;
+    }
+
 }

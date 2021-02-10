@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import com.streamsets.pipeline.api.Field;
 import com.streamsets.pipeline.api.PushSource;
 import com.streamsets.pipeline.api.Record;
+import com.streamsets.pipeline.api.StageException;
 import com.streamsets.pipeline.api.impl.Utils;
 import com.streamsets.pipeline.api.service.dataformats.DataParserException;
 import com.streamsets.pipeline.api.service.dataformats.RecoverableDataParserException;
@@ -13,6 +14,8 @@ import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.form
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.format.CsvHeader;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.format.CsvRecordType;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.EventTimeConfig;
+import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.RelativeTimeResolution;
+import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.TimestampModeType;
 import com.trivadis.streamsets.sdc.csv.CsvParser;
 import org.apache.commons.csv.CSVFormat;
 
@@ -20,6 +23,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class BufferedDataStreamFileReader {
@@ -67,6 +72,7 @@ public class BufferedDataStreamFileReader {
     private PushSource.Context context;
 
     private int timestampPosition;
+    private SimpleDateFormat dateFormatter = null;
 
     private int recordCount = 0;
 
@@ -208,6 +214,10 @@ public class BufferedDataStreamFileReader {
     public BufferedDataStreamFileReader withConfig(EventTimeConfig eventTimeConfig, CsvConfig csvConfig) {
         this.eventTimeConfig = eventTimeConfig;
         this.csvConfig = csvConfig;
+
+        if (eventTimeConfig.getDateMask() != null) {
+            dateFormatter = new SimpleDateFormat(eventTimeConfig.getDateMask());
+        }
         return this;
     }
 
@@ -248,26 +258,42 @@ public class BufferedDataStreamFileReader {
             String[] line;
             try {
                 while (this.buffer.size() < this.maxBufferSize) {
-                    int actualParser = recordCount % csvParsers.size();
-                    line = csvParsers.get(actualParser).read();
+                    try {
+                        int actualParser = recordCount % csvParsers.size();
+                        line = csvParsers.get(actualParser).read();
 
-                    if (line == null) {
-                        this.fileEnd = true;
-                        return;
-                    } else {
-                        Record record = createRecord(context, 1, getHeaders(), line);
-                        setHeaders(record, recordHeaderAttrList.get(actualParser));
+                        if (line == null) {
+                            this.fileEnd = true;
+                            return;
+                        } else {
+                            Record record = createRecord(context, 1, getHeaders(), line);
+                            setHeaders(record, recordHeaderAttrList.get(actualParser));
 
-                        if (!record.has(eventTimeConfig.timestampField)) {
-                            throw new RuntimeException("record does not contain field: " +  eventTimeConfig.timestampField + " -> " + record);
+                            if (!record.has(eventTimeConfig.timestampField)) {
+                                throw new RuntimeException("record does not contain field: " + eventTimeConfig.timestampField + " -> " + record);
+                            }
+
+                            long eventTime = 0;
+                            if (eventTimeConfig.timestampMode.equals(TimestampModeType.RELATIVE)) {
+                                eventTime = record.get(eventTimeConfig.timestampField).getValueAsLong();
+                                if (eventTimeConfig.relativeTimeResolution.equals(RelativeTimeResolution.SECONDS)) {
+                                    eventTime = eventTime * 1000;
+                                }
+                            } else if (eventTimeConfig.timestampMode.equals(TimestampModeType.ABSOLUTE)) {
+                                String absoluteTimeString = record.get(eventTimeConfig.timestampField).getValueAsString();
+                                Date absoluteTime = dateFormatter.parse(absoluteTimeString);
+                                eventTime = absoluteTime.getTime();
+                            }
+
+                            if (!buffer.containsKey(eventTime)) {
+                                buffer.put(eventTime, new ArrayList<Record>());
+                            }
+                            buffer.get(eventTime).add(record);
                         }
-                        long eventTime = record.get(eventTimeConfig.timestampField).getValueAsLong();
-                        if (!buffer.containsKey(eventTime)) {
-                            buffer.put(eventTime, new ArrayList<Record>());
-                        }
-                        buffer.get(eventTime).add(record);
+                        recordCount++;
+                    } catch (ParseException e) {
+                        throw new StageException(Errors.DEV_SIMULATOR_002, e.toString(), e);
                     }
-                    recordCount++;
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -294,7 +320,7 @@ public class BufferedDataStreamFileReader {
     }
 
 
-    public List<Record> pollFromBuffer() {
+    public Map.Entry<Long, List<Record>> pollFromBuffer() {
         if (buffer.size() > 0) {
             Map.Entry<Long, List<Record>> res = buffer.firstEntry();
             buffer.remove(res.getKey());
@@ -302,11 +328,11 @@ public class BufferedDataStreamFileReader {
             if (!this.fileEnd && this.buffer.size() < this.minBufferSize) {
                 fillBuffer();
             }
-            return res.getValue();
+            return res;
         } else {
             fillBuffer();
             // throw
         }
-        return new ArrayList<Record>();
+        return null;
     }
 }

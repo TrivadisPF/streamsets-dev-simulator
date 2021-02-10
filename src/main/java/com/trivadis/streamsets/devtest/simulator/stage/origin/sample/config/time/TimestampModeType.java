@@ -18,9 +18,9 @@ package com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.tim
 import com.streamsets.pipeline.api.Label;
 
 public enum TimestampModeType implements Label {
-  FIXED("Fixed (not yet supported)"),
-  ABSOLUTE("Absolute (not yet supported)"),
+  ABSOLUTE("Absolute"),
   RELATIVE("Relative"),
+  FIXED("Fixed (not yet supported)"),
   ABSOLUTE_RELATIVE("Absolute/Relative (not yet supported)"),
   ;
 
