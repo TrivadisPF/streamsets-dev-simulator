@@ -35,7 +35,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class TestSampleSource {
+public class TestDevSimulatorSource {
   private static final int MAX_BATCH_SIZE = 5;
 
   private PushSourceRunner runner;
