@@ -189,6 +189,8 @@ public class DevSimulatorSource extends BasePushSource {
                         }
 
                         record.set(eventTimeConfig.eventTimestampOutputField, Field.create(eventTimestampMs));
+                        //record.set("/StartEventTimestamp", Field.create(startTimestampMs));
+                        record.getHeader().setAttribute("startEventTimestamp", String.valueOf(startTimestampMs));
 
                         batchMaker.addRecord(record);
                     } else {
