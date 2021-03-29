@@ -163,12 +163,24 @@ public class EventTimeConfig {
     public String simulationStartTimestampDateOtherDateFormat;
 
     @ConfigDef(
+            required = true,
+            type = ConfigDef.Type.NUMBER,
+            defaultValue = "0",
+            label = "Delay Sending Messages",
+            displayPosition = 60,
+            description = "Delay sending first message my milliseconds",
+            displayMode = ConfigDef.DisplayMode.ADVANCED,
+            group = "EVENT_TIME"
+    )
+    public long delayMs = 0;
+
+    @ConfigDef(
             required = false,
             type = ConfigDef.Type.NUMBER,
             defaultValue = "1",
             label = "Speedup Factor",
             description = "Speedup value for the match simulation (1.0 = normal speed, 0.1 = 10 times slower, 10.0 = 10 times faster).",
-            displayPosition = 60,
+            displayPosition = 65,
             displayMode = ConfigDef.DisplayMode.ADVANCED,
             group = "EVENT_TIME"
     )
