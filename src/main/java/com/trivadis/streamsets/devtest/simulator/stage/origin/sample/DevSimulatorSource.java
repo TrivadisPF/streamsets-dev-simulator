@@ -3,11 +3,11 @@ package com.trivadis.streamsets.devtest.simulator.stage.origin.sample;
 import com.google.common.base.Preconditions;
 import com.streamsets.pipeline.api.*;
 import com.streamsets.pipeline.api.base.BasePushSource;
+import com.streamsets.pipeline.api.impl.Utils;
 import com.streamsets.pipeline.api.lineage.EndPointType;
 import com.streamsets.pipeline.api.lineage.LineageEvent;
 import com.streamsets.pipeline.api.lineage.LineageEventType;
 import com.streamsets.pipeline.api.lineage.LineageSpecificAttribute;
-import com.trivadis.streamsets.devtest.simulator.stage.lib.sample.Errors;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.DevSimulatorConfig;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.files.PathMatcherMode;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.format.CsvConfig;
@@ -24,12 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 public class DevSimulatorSource extends BasePushSource {
@@ -46,6 +41,8 @@ public class DevSimulatorSource extends BasePushSource {
     private long maxWaitTime;
 
     private long startTimestampMs = 0;
+
+    private boolean publishStartEventSent = false;
 
     private Collection getAllFilesThatMatchFilenameExtension(String directoryName, String pattern, boolean includeSubdirectories, PathMatcherMode pathMatcherMode) {
         File directory = new File(directoryName);
@@ -126,7 +123,8 @@ public class DevSimulatorSource extends BasePushSource {
             }
         }
 
-        long machineStartTimestampMs = System.currentTimeMillis();
+        // set the machineStartTimestampMs to be the actual time + configurable delay
+        long machineStartTimestampMs = System.currentTimeMillis() + eventTimeConfig.delayMs;
 
         try {
             boolean cont = true;
@@ -136,6 +134,16 @@ public class DevSimulatorSource extends BasePushSource {
             while (!getContext().isStopped() && cont) {
                 try {
                     if (batchContext == null) {
+                        batchContext = getContext().startBatch();
+
+                        // publish event for simulation start
+                        String eventRecordSourceId = Utils.format("event:{}", machineStartTimestampMs);
+                        EventRecord eventRecord = getContext().createEventRecord("simulation-start", 1, eventRecordSourceId);
+                        Map<String, Field> eventMap = new HashMap<>();
+                        eventMap.put("timestampMs", Field.create(machineStartTimestampMs));
+                        eventRecord.set(Field.create(eventMap));
+                        batchContext.toEvent(eventRecord);
+                        getContext().processBatch(batchContext);
                         batchContext = getContext().startBatch();
                     }
 
@@ -186,6 +194,18 @@ public class DevSimulatorSource extends BasePushSource {
                             } catch (InterruptedException e) {
                                 break;
                             }
+                        }
+
+                        // if a delay was used, send another event upon start of sending messages
+                        if (eventTimeConfig.delayMs > 0 && !publishStartEventSent) {
+                            String eventRecordSourceId = Utils.format("event:{}", eventTimestampMs);
+                            EventRecord eventRecord = getContext().createEventRecord("publishing-start", 1, eventRecordSourceId);
+                            Map<String, Field> eventMap = new HashMap<>();
+                            eventMap.put("timestampMs", Field.create(eventTimestampMs));
+                            eventRecord.set(Field.create(eventMap));
+                            batchContext.toEvent(eventRecord);
+
+                            publishStartEventSent = true;
                         }
 
                         record.set(eventTimeConfig.eventTimestampOutputField, Field.create(eventTimestampMs));
