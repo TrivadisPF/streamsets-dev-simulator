@@ -19,9 +19,9 @@ import com.streamsets.pipeline.api.Label;
 
 public enum TimestampModeType implements Label {
   ABSOLUTE("Absolute"),
-  RELATIVE("Relative"),
+  RELATIVE_FROM_ANCHOR("Relative from Anchor Timestamp"),
+  RELATIVE_FROM_PREVIOUS("Relative from Previous Event"),
   FIXED("Fixed (not yet supported)"),
-  ABSOLUTE_RELATIVE("Absolute/Relative (not yet supported)"),
   ;
 
   private String label;

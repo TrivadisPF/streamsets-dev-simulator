@@ -25,7 +25,7 @@ import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.form
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.format.CsvHeader;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.format.DataFormatType;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.multitype.MultiTypeConfig;
-import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.SimulationStartDateFormat;
+import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.AnchorDateFormat;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.EventTimeConfig;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.TimestampModeType;
 import org.junit.Test;
@@ -60,11 +60,11 @@ public class TestDevSimulatorSource {
 
     EventTimeConfig eventTimeConfig = new EventTimeConfig();
     eventTimeConfig.timestampField = "/Timestamp";
-    eventTimeConfig.timestampMode = TimestampModeType.RELATIVE;
+    eventTimeConfig.timestampMode = TimestampModeType.RELATIVE_FROM_ANCHOR;
     eventTimeConfig.eventTimestampOutputField = "/EventTimestamp";
-    eventTimeConfig.simulationStartNow = true;
-    eventTimeConfig.simulationStartTimestamp = "16:00:00";
-    eventTimeConfig.simulationStartTimestampDateFormat = SimulationStartDateFormat.HH_MM_SS;
+    eventTimeConfig.anchorTimeNow = true;
+    eventTimeConfig.anchorTimestamp = "16:00:00";
+    eventTimeConfig.anchorTimestampDateFormat = AnchorDateFormat.HH_MM_SS;
     eventTimeConfig.speedup = 1.0;
 
     DevSimulatorDSource origin = new DevSimulatorDSource();

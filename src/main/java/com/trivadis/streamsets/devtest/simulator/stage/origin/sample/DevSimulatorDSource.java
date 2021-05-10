@@ -50,6 +50,8 @@ import java.util.stream.Collectors;
         label = "Dev Simulator",
         description = "Reads files with data and simulates it as messages considering the timestamp for replaying. For development only",
         icon = "dev.png",
+        outputStreams = StageDef.VariableOutputStreams.class,
+        outputStreamsDrivenByConfig = "multiTypeConfig.messageTypes",
         execution = {ExecutionMode.STANDALONE, ExecutionMode.EDGE},
         producesEvents = true,
         recordsByRef = true,
@@ -78,4 +80,6 @@ public class DevSimulatorDSource extends DPushSource {
     protected PushSource createPushSource() {
         return new DevSimulatorSource(basicConfig, eventTimeConfig, multiTypeConfig, csvConfig);
     }
+
+
 }

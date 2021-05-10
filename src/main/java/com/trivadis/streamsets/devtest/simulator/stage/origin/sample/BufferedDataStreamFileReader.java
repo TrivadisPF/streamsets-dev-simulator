@@ -10,14 +10,18 @@ import com.streamsets.pipeline.api.impl.Utils;
 import com.streamsets.pipeline.api.service.dataformats.DataParserException;
 import com.streamsets.pipeline.api.service.dataformats.RecoverableDataParserException;
 import com.trivadis.streamsets.devtest.simulator.stage.lib.sample.Errors;
+import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.DevSimulatorConfig;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.format.CsvConfig;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.format.CsvHeader;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.format.CsvRecordType;
+import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.multitype.MultiTypeConfig;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.EventTimeConfig;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.RelativeTimeResolution;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.TimestampModeType;
 import com.trivadis.streamsets.sdc.csv.CsvParser;
 import org.apache.commons.csv.CSVFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileReader;
@@ -28,6 +32,12 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class BufferedDataStreamFileReader {
+    private static final Logger LOG = LoggerFactory.getLogger(BufferedDataStreamFileReader.class);
+
+    /**
+     * The DevSimulatro Config object
+     */
+    private DevSimulatorConfig devSimulatorConfig;
 
     /**
      * The CSV Config object
@@ -38,6 +48,16 @@ public class BufferedDataStreamFileReader {
      * The Event Time Config object
      */
     private EventTimeConfig eventTimeConfig;
+
+    /**
+     * The Multi Type Config object
+     */
+    private MultiTypeConfig multiTypeConfig;
+
+    /**
+     * a list of discriminators, if multiple types should be supported
+     */
+    //private List<String> discriminators = new ArrayList<>();
 
     /**
      * Minimal number of elements in the buffer (if the end of the file is not reached yet)
@@ -68,6 +88,8 @@ public class BufferedDataStreamFileReader {
      * Buffer storing prefetched objects
      */
     private NavigableMap<Long, List<Record>> buffer;
+
+    private Map<String, Long> previousTimestampMsPerOutputLane = null;
 
     private PushSource.Context context;
 
@@ -211,12 +233,18 @@ public class BufferedDataStreamFileReader {
         return this;
     }
 
-    public BufferedDataStreamFileReader withConfig(EventTimeConfig eventTimeConfig, CsvConfig csvConfig) {
+    public BufferedDataStreamFileReader withConfig(DevSimulatorConfig devSimulatorConfig, EventTimeConfig eventTimeConfig, CsvConfig csvConfig, MultiTypeConfig multiTypeConfig) {
         this.eventTimeConfig = eventTimeConfig;
         this.csvConfig = csvConfig;
+        this.multiTypeConfig = multiTypeConfig;
+        this.devSimulatorConfig = devSimulatorConfig;
 
         if (eventTimeConfig.getDateMask() != null) {
             dateFormatter = new SimpleDateFormat(eventTimeConfig.getDateMask());
+        }
+
+        if (eventTimeConfig.timestampMode.equals(TimestampModeType.RELATIVE_FROM_PREVIOUS)) {
+            previousTimestampMsPerOutputLane = new HashMap<>();
         }
         return this;
     }
@@ -269,26 +297,48 @@ public class BufferedDataStreamFileReader {
                             Record record = createRecord(context, 1, getHeaders(), line);
                             setHeaders(record, recordHeaderAttrList.get(actualParser));
 
-                            if (!record.has(eventTimeConfig.timestampField)) {
-                                throw new RuntimeException("record does not contain field: " + eventTimeConfig.timestampField + " -> " + record);
-                            }
+                            // handle record types
+                            if (!devSimulatorConfig.useMultiRecordType ||
+                                    (multiTypeConfig != null &&
+                                    multiTypeConfig.contains(record.get(multiTypeConfig.discriminatorField).getValueAsString()))) {
 
-                            long eventTime = 0;
-                            if (eventTimeConfig.timestampMode.equals(TimestampModeType.RELATIVE)) {
-                                eventTime = record.get(eventTimeConfig.timestampField).getValueAsLong();
-                                if (eventTimeConfig.relativeTimeResolution.equals(RelativeTimeResolution.SECONDS)) {
-                                    eventTime = eventTime * 1000;
+                                String outputLane = "1";
+                                if (devSimulatorConfig.useMultiRecordType) {
+                                    outputLane = multiTypeConfig.outputLane(record.get(multiTypeConfig.discriminatorField).getValueAsString());
+                                    record.getHeader().setAttribute("_outputLane", outputLane);
                                 }
-                            } else if (eventTimeConfig.timestampMode.equals(TimestampModeType.ABSOLUTE)) {
-                                String absoluteTimeString = record.get(eventTimeConfig.timestampField).getValueAsString();
-                                Date absoluteTime = dateFormatter.parse(absoluteTimeString);
-                                eventTime = absoluteTime.getTime();
-                            }
 
-                            if (!buffer.containsKey(eventTime)) {
-                                buffer.put(eventTime, new ArrayList<Record>());
+                                if (!record.has(eventTimeConfig.timestampField)) {
+                                    throw new RuntimeException("record does not contain field: " + eventTimeConfig.timestampField + " -> " + record);
+                                }
+
+                                long eventTime = 0;
+                                if (eventTimeConfig.timestampMode.equals(TimestampModeType.RELATIVE_FROM_ANCHOR)) {
+                                    eventTime = record.get(eventTimeConfig.timestampField).getValueAsLong() - eventTimeConfig.fastForwardToTimestamp;
+                                    if (eventTimeConfig.relativeTimeResolution.equals(RelativeTimeResolution.SECONDS)) {
+                                        eventTime = eventTime * 1000;
+                                    }
+                                } else if (eventTimeConfig.timestampMode.equals(TimestampModeType.RELATIVE_FROM_PREVIOUS)) {
+                                    eventTime = record.get(eventTimeConfig.timestampField).getValueAsLong();
+
+                                    Long previousEventTime = previousTimestampMsPerOutputLane.containsKey(outputLane) ? previousTimestampMsPerOutputLane.get(outputLane) : 0;
+                                    Long previousPlusEventTime = previousEventTime + eventTime;
+                                    previousTimestampMsPerOutputLane.put(outputLane, previousPlusEventTime);
+
+                                    if (eventTimeConfig.relativeTimeResolution.equals(RelativeTimeResolution.SECONDS)) {
+                                        eventTime = previousPlusEventTime * 1000;
+                                    }
+                                } else if (eventTimeConfig.timestampMode.equals(TimestampModeType.ABSOLUTE)) {
+                                    String absoluteTimeString = record.get(eventTimeConfig.timestampField).getValueAsString();
+                                    Date absoluteTime = dateFormatter.parse(absoluteTimeString);
+                                    eventTime = absoluteTime.getTime();
+                                }
+
+                                if (!buffer.containsKey(eventTime)) {
+                                    buffer.put(eventTime, new ArrayList<Record>());
+                                }
+                                buffer.get(eventTime).add(record);
                             }
-                            buffer.get(eventTime).add(record);
                         }
                         recordCount++;
                     } catch (ParseException e) {

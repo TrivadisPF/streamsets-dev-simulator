@@ -2,6 +2,7 @@ package com.trivadis.streamsets.devtest.simulator.stage.origin.sample;
 
 import com.google.common.base.Preconditions;
 import com.streamsets.pipeline.api.*;
+import com.streamsets.pipeline.api.Record;
 import com.streamsets.pipeline.api.base.BasePushSource;
 import com.streamsets.pipeline.api.impl.Utils;
 import com.streamsets.pipeline.api.lineage.EndPointType;
@@ -85,7 +86,7 @@ public class DevSimulatorSource extends BasePushSource {
         try {
             bufferedDataStream = BufferedDataStreamFileReader.create()
                     .withContext(getContext())
-                    .withConfig(eventTimeConfig, csvConfig)
+                    .withConfig(basicConfig, eventTimeConfig, csvConfig, multiTypeConfig)
                     .withFiles(files)
                     .withMinBufferSize(basicConfig.minBufferSize)
                     .withMaxBufferSize(basicConfig.maxBufferSize);
@@ -114,11 +115,12 @@ public class DevSimulatorSource extends BasePushSource {
         long currentTimestampMs = System.currentTimeMillis();
 
         // set the start timestamp and delta if RELATIVE timestamp mode
-        if (this.eventTimeConfig.timestampMode.equals(TimestampModeType.RELATIVE)) {
-            if (this.eventTimeConfig.simulationStartNow) {
+        if (this.eventTimeConfig.timestampMode.equals(TimestampModeType.RELATIVE_FROM_ANCHOR)
+                || this.eventTimeConfig.timestampMode.equals(TimestampModeType.RELATIVE_FROM_PREVIOUS)) {
+            if (this.eventTimeConfig.anchorTimeNow) {
                 startTimestampMs = currentTimestampMs;
             } else {
-                startTimestampMs = DateUtil.parseCustomFormat(eventTimeConfig.simulationStartTimestampDateFormat.getFormat(), eventTimeConfig.simulationStartTimestamp) * 1000;
+                startTimestampMs = DateUtil.parseCustomFormat(eventTimeConfig.anchorTimestampDateFormat.getFormat(), eventTimeConfig.anchorTimestamp) * 1000;
                 //deltaMs = currentTimestampMs - startTimestampMs;
             }
         }
@@ -138,9 +140,10 @@ public class DevSimulatorSource extends BasePushSource {
 
                         // publish event for simulation start
                         String eventRecordSourceId = Utils.format("event:{}", machineStartTimestampMs);
-                        EventRecord eventRecord = getContext().createEventRecord("simulation-start", 1, eventRecordSourceId);
+                        EventRecord eventRecord = getContext().createEventRecord("START", 1, eventRecordSourceId);
                         Map<String, Field> eventMap = new HashMap<>();
                         eventMap.put("timestampMs", Field.create(machineStartTimestampMs));
+                        eventMap.put("event", Field.create("START"));
                         eventRecord.set(Field.create(eventMap));
                         batchContext.toEvent(eventRecord);
                         getContext().processBatch(batchContext);
@@ -173,18 +176,19 @@ public class DevSimulatorSource extends BasePushSource {
                 }
 
                 for (Record record : timestampWithRecords.getValue()) {
+                    String outputLane = record.getHeader().getAttribute("_outputLane");
                     long currentEventTimeMs = TimeUtil.generateTimestamp(System.currentTimeMillis(), machineStartTimestampMs, startTimestampMs, eventTimeConfig.speedup);
                     if (record != null) {
                         long eventTimestampMs = 0;
 
-                        if (eventTimeConfig.timestampMode.equals(TimestampModeType.RELATIVE)) {
+                        if (eventTimeConfig.timestampMode.equals(TimestampModeType.RELATIVE_FROM_ANCHOR)) {
+                            eventTimestampMs = startTimestampMs + recordTimeMs;
+                        } else if (eventTimeConfig.timestampMode.equals(TimestampModeType.RELATIVE_FROM_PREVIOUS)) {
                             eventTimestampMs = startTimestampMs + recordTimeMs;
                         } else if (eventTimeConfig.timestampMode.equals(TimestampModeType.ABSOLUTE)) {
                             eventTimestampMs = recordTimeMs;
-                        } else if (eventTimeConfig.timestampMode.equals(TimestampModeType.ABSOLUTE_RELATIVE)) {
-
                         } else if (eventTimeConfig.timestampMode.equals(TimestampModeType.FIXED)) {
-
+                            // t.b.d.
                         }
 
                         if (eventTimestampMs > currentEventTimeMs) {
@@ -212,7 +216,11 @@ public class DevSimulatorSource extends BasePushSource {
                         //record.set("/StartEventTimestamp", Field.create(startTimestampMs));
                         record.getHeader().setAttribute("startEventTimestamp", String.valueOf(startTimestampMs));
 
-                        batchMaker.addRecord(record);
+                        if (basicConfig.useMultiRecordType) {
+                            batchMaker.addRecord(record, record.getHeader().getAttribute("_outputLane"));
+                        } else {
+                            batchMaker.addRecord(record);
+                        }
                     } else {
                         return false;
                     }

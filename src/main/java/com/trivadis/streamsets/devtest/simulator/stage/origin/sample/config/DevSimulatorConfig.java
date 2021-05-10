@@ -106,7 +106,7 @@ public class DevSimulatorConfig {
             required = true,
             type = ConfigDef.Type.BOOLEAN,
             defaultValue = "false",
-            label = "Multiple Record Types",
+            label = "Different Record Types?",
             description = "Support multiple, different Record Types.",
             group = "FILES",
             displayPosition = 30
