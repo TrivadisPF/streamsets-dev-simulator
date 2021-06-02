@@ -282,10 +282,11 @@ public class BufferedDataStreamFileReader {
     }
 
     public void fillBuffer() {
+        LOG.info("fillBuffer() called buffer.size() = " + buffer.size() + ": maxBufferSize =" + this.maxBufferSize);
         if (!this.fileEnd && this.buffer.size() < this.maxBufferSize) {
             String[] line;
             try {
-                while (this.buffer.size() < this.maxBufferSize) {
+                while (!fileEnd && this.buffer.size() < this.maxBufferSize) {
                     try {
                         int actualParser = recordCount % csvParsers.size();
                         line = csvParsers.get(actualParser).read();
@@ -293,7 +294,9 @@ public class BufferedDataStreamFileReader {
                         if (line == null) {
                             csvParsers.remove(actualParser);
                             this.fileEnd = csvParsers.isEmpty();
-                            return;
+
+                            if (fileEnd)
+                                LOG.info("fillBuffer() no more records, buffer.size() = " + buffer.size());
                         } else {
                             Record record = createRecord(context, 1, getHeaders(actualParser), line);
                             setHeaders(record, recordHeaderAttrList.get(actualParser));
@@ -340,8 +343,8 @@ public class BufferedDataStreamFileReader {
                                 }
                                 buffer.get(eventTime).add(record);
                             }
+                            recordCount++;
                         }
-                        recordCount++;
                     } catch (ParseException e) {
                         throw new StageException(Errors.DEV_SIMULATOR_002, e.toString(), e);
                     }
@@ -359,6 +362,8 @@ public class BufferedDataStreamFileReader {
                 buffer.remove(res.getKey());
 
                 if (!this.fileEnd && this.buffer.size() < this.minBufferSize) {
+                    LOG.info("(1) invoke fillBuffer() ");
+
                     fillBuffer();
                 }
                 return res.getValue();
@@ -377,10 +382,14 @@ public class BufferedDataStreamFileReader {
             buffer.remove(res.getKey());
 
             if (!this.fileEnd && this.buffer.size() < this.minBufferSize) {
+                LOG.info("(2) invoke fillBuffer() ");
+
                 fillBuffer();
             }
             return res;
         } else {
+            LOG.info("(3) invoke fillBuffer() ");
+
             fillBuffer();
             // throw
         }
