@@ -291,7 +291,8 @@ public class BufferedDataStreamFileReader {
                         line = csvParsers.get(actualParser).read();
 
                         if (line == null) {
-                            this.fileEnd = true;
+                            csvParsers.remove(actualParser);
+                            this.fileEnd = csvParsers.isEmpty();
                             return;
                         } else {
                             Record record = createRecord(context, 1, getHeaders(actualParser), line);
