@@ -110,7 +110,7 @@ public class BufferedDataStreamFileReader {
                     .build()
             ));
 
-            throw new RecoverableDataParserException(record, Errors.DEV_SIMULATOR_001, offset, columns.length, headers.size());
+            throw new RecoverableDataParserException(record, Errors.DEV_SIMULATOR_001, offset, columns.length, headers.size(), headers);
         }
 
         if (csvConfig.csvRecordType == CsvRecordType.LIST) {
@@ -267,10 +267,10 @@ public class BufferedDataStreamFileReader {
         return this;
     }
 
-    public List<Field> getHeaders() throws IOException {
+    public List<Field> getHeaders(int parser) throws IOException {
         List<Field> headers = null;
         if (csvConfig.csvHeader != CsvHeader.NO_HEADER) {
-            String[] hs = csvParsers.get(0).getHeaders();
+            String[] hs = csvParsers.get(parser).getHeaders();
             if (csvConfig.csvHeader != CsvHeader.IGNORE_HEADER && hs != null) {
                 headers = new ArrayList<>();
                 for (String h : hs) {
@@ -294,7 +294,7 @@ public class BufferedDataStreamFileReader {
                             this.fileEnd = true;
                             return;
                         } else {
-                            Record record = createRecord(context, 1, getHeaders(), line);
+                            Record record = createRecord(context, 1, getHeaders(actualParser), line);
                             setHeaders(record, recordHeaderAttrList.get(actualParser));
 
                             // handle record types
