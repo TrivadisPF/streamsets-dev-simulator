@@ -62,34 +62,6 @@ public class DevSimulatorConfig {
     @ValueChooserModel(PathMatcherModeChooserValues.class)
     public PathMatcherMode pathMatcherMode = PathMatcherMode.WILDCARD;
 
-
-    @ConfigDef(
-            required = true,
-            type = ConfigDef.Type.NUMBER,
-            defaultValue = "10",
-            label = "Minimum Buffer size",
-            description = "Number of records that will be generated for single batch.",
-            min = 1,
-            max = Integer.MAX_VALUE,
-            displayMode = ConfigDef.DisplayMode.ADVANCED,
-            group = "FILES"
-    )
-    public int minBufferSize = 10;
-
-    @ConfigDef(
-            required = true,
-            type = ConfigDef.Type.NUMBER,
-            defaultValue = "100",
-            label = "Maximum Buffer size",
-            description = "Number of records that will be generated for single batch.",
-            min = 1,
-            max = Integer.MAX_VALUE,
-            displayMode = ConfigDef.DisplayMode.ADVANCED,
-            group = "FILES"
-    )
-    public int maxBufferSize = 100;
-
-
     @ValueChooserModel(InputDataFormatChooserValues.class)
     @ConfigDef(
             required = true,

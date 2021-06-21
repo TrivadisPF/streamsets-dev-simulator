@@ -1,5 +1,5 @@
 #
-# Copyright 2017 StreamSets Inc.
+# Copyright 2019 StreamSets Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,4 +14,7 @@
 # limitations under the License.
 #
 
-library.name=Dev Simulator 1.1.0
+upgraderVersion: 1
+
+# No upgrade rules defined
+upgrades: []

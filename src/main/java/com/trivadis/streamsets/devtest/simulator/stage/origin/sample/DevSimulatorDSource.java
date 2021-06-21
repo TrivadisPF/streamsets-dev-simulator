@@ -46,7 +46,7 @@ import java.util.stream.Collectors;
 
 @GenerateResourceBundle
 @StageDef(
-        version = 1,
+        version = 2,
         label = "Dev Simulator",
         description = "Reads files with data and simulates it as messages considering the timestamp for replaying. For development only",
         icon = "dev.png",
@@ -55,6 +55,8 @@ import java.util.stream.Collectors;
         execution = {ExecutionMode.STANDALONE, ExecutionMode.EDGE},
         producesEvents = true,
         recordsByRef = true,
+        upgrader = DevSimulatorSourceUpgrader.class,
+        upgraderDef = "upgrader/DevSimulatorDSource.yaml",
         onlineHelpRefUrl = ""
 )
 @ConfigGroups(value = Groups.class)

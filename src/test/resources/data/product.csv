@@ -1,0 +1,305 @@
+disc	ts	productid	name	subcatid	price
+product	0	514	LL Mountain Seat Assembly		133,34
+product	0	515	ML Mountain Seat Assembly		147,14
+product	0	516	HL Mountain Seat Assembly		196,92
+product	0	517	LL Road Seat Assembly		133,34
+product	0	518	ML Road Seat Assembly		147,14
+product	0	519	HL Road Seat Assembly		196,92
+product	0	520	LL Touring Seat Assembly		133,34
+product	0	521	ML Touring Seat Assembly		147,14
+product	0	522	HL Touring Seat Assembly		196,92
+product	0	680	HL Road Frame - Black, 58	14	1431,50
+product	0	706	HL Road Frame - Red, 58	14	1431,50
+product	0	707	Sport-100 Helmet, Red	31	34,99
+product	0	708	Sport-100 Helmet, Black	31	34,99
+product	0	709	Mountain Bike Socks, M	23	9,50
+product	0	710	Mountain Bike Socks, L	23	9,50
+product	0	711	Sport-100 Helmet, Blue	31	34,99
+product	0	712	AWC Logo Cap	19	8,99
+product	0	713	Long-Sleeve Logo Jersey, S	21	49,99
+product	0	714	Long-Sleeve Logo Jersey, M	21	49,99
+product	0	715	Long-Sleeve Logo Jersey, L	21	49,99
+product	0	716	Long-Sleeve Logo Jersey, XL	21	49,99
+product	0	717	HL Road Frame - Red, 62	14	1431,50
+product	0	718	HL Road Frame - Red, 44	14	1431,50
+product	0	719	HL Road Frame - Red, 48	14	1431,50
+product	0	720	HL Road Frame - Red, 52	14	1431,50
+product	0	721	HL Road Frame - Red, 56	14	1431,50
+product	0	722	LL Road Frame - Black, 58	14	337,22
+product	0	723	LL Road Frame - Black, 60	14	337,22
+product	0	724	LL Road Frame - Black, 62	14	337,22
+product	0	725	LL Road Frame - Red, 44	14	337,22
+product	0	726	LL Road Frame - Red, 48	14	337,22
+product	0	727	LL Road Frame - Red, 52	14	337,22
+product	0	728	LL Road Frame - Red, 58	14	337,22
+product	0	729	LL Road Frame - Red, 60	14	337,22
+product	0	730	LL Road Frame - Red, 62	14	337,22
+product	0	731	ML Road Frame - Red, 44	14	594,83
+product	0	732	ML Road Frame - Red, 48	14	594,83
+product	0	733	ML Road Frame - Red, 52	14	594,83
+product	0	734	ML Road Frame - Red, 58	14	594,83
+product	0	735	ML Road Frame - Red, 60	14	594,83
+product	0	736	LL Road Frame - Black, 44	14	337,22
+product	0	737	LL Road Frame - Black, 48	14	337,22
+product	0	738	LL Road Frame - Black, 52	14	337,22
+product	0	739	HL Mountain Frame - Silver, 42	12	1364,50
+product	0	740	HL Mountain Frame - Silver, 44	12	1364,50
+product	0	741	HL Mountain Frame - Silver, 48	12	1364,50
+product	0	742	HL Mountain Frame - Silver, 46	12	1364,50
+product	0	743	HL Mountain Frame - Black, 42	12	1349,60
+product	0	744	HL Mountain Frame - Black, 44	12	1349,60
+product	0	745	HL Mountain Frame - Black, 48	12	1349,60
+product	0	746	HL Mountain Frame - Black, 46	12	1349,60
+product	0	747	HL Mountain Frame - Black, 38	12	1349,60
+product	0	748	HL Mountain Frame - Silver, 38	12	1364,50
+product	0	749	Road-150 Red, 62	2	3578,27
+product	0	750	Road-150 Red, 44	2	3578,27
+product	0	751	Road-150 Red, 48	2	3578,27
+product	0	752	Road-150 Red, 52	2	3578,27
+product	0	753	Road-150 Red, 56	2	3578,27
+product	0	754	Road-450 Red, 58	2	1457,99
+product	0	755	Road-450 Red, 60	2	1457,99
+product	0	756	Road-450 Red, 44	2	1457,99
+product	0	757	Road-450 Red, 48	2	1457,99
+product	0	758	Road-450 Red, 52	2	1457,99
+product	0	759	Road-650 Red, 58	2	782,99
+product	0	760	Road-650 Red, 60	2	782,99
+product	0	761	Road-650 Red, 62	2	782,99
+product	0	762	Road-650 Red, 44	2	782,99
+product	0	763	Road-650 Red, 48	2	782,99
+product	0	764	Road-650 Red, 52	2	782,99
+product	0	765	Road-650 Black, 58	2	782,99
+product	0	766	Road-650 Black, 60	2	782,99
+product	0	767	Road-650 Black, 62	2	782,99
+product	0	768	Road-650 Black, 44	2	782,99
+product	0	769	Road-650 Black, 48	2	782,99
+product	0	770	Road-650 Black, 52	2	782,99
+product	0	771	Mountain-100 Silver, 38	1	3399,99
+product	0	772	Mountain-100 Silver, 42	1	3399,99
+product	0	773	Mountain-100 Silver, 44	1	3399,99
+product	0	774	Mountain-100 Silver, 48	1	3399,99
+product	0	775	Mountain-100 Black, 38	1	3374,99
+product	0	776	Mountain-100 Black, 42	1	3374,99
+product	0	777	Mountain-100 Black, 44	1	3374,99
+product	0	778	Mountain-100 Black, 48	1	3374,99
+product	0	779	Mountain-200 Silver, 38	1	2319,99
+product	0	780	Mountain-200 Silver, 42	1	2319,99
+product	0	781	Mountain-200 Silver, 46	1	2319,99
+product	0	782	Mountain-200 Black, 38	1	2294,99
+product	0	783	Mountain-200 Black, 42	1	2294,99
+product	0	784	Mountain-200 Black, 46	1	2294,99
+product	0	785	Mountain-300 Black, 38	1	1079,99
+product	0	786	Mountain-300 Black, 40	1	1079,99
+product	0	787	Mountain-300 Black, 44	1	1079,99
+product	0	788	Mountain-300 Black, 48	1	1079,99
+product	0	789	Road-250 Red, 44	2	2443,35
+product	0	790	Road-250 Red, 48	2	2443,35
+product	0	791	Road-250 Red, 52	2	2443,35
+product	0	792	Road-250 Red, 58	2	2443,35
+product	0	793	Road-250 Black, 44	2	2443,35
+product	0	794	Road-250 Black, 48	2	2443,35
+product	0	795	Road-250 Black, 52	2	2443,35
+product	0	796	Road-250 Black, 58	2	2443,35
+product	0	797	Road-550-W Yellow, 38	2	1120,49
+product	0	798	Road-550-W Yellow, 40	2	1120,49
+product	0	799	Road-550-W Yellow, 42	2	1120,49
+product	0	800	Road-550-W Yellow, 44	2	1120,49
+product	0	801	Road-550-W Yellow, 48	2	1120,49
+product	0	802	LL Fork	10	148,22
+product	0	803	ML Fork	10	175,49
+product	0	804	HL Fork	10	229,49
+product	0	805	LL Headset	11	34,20
+product	0	806	ML Headset	11	102,29
+product	0	807	HL Headset	11	124,73
+product	0	808	LL Mountain Handlebars	4	44,54
+product	0	809	ML Mountain Handlebars	4	61,92
+product	0	810	HL Mountain Handlebars	4	120,27
+product	0	811	LL Road Handlebars	4	44,54
+product	0	812	ML Road Handlebars	4	61,92
+product	0	813	HL Road Handlebars	4	120,27
+product	0	814	ML Mountain Frame - Black, 38	12	348,76
+product	0	815	LL Mountain Front Wheel	17	60,745
+product	0	816	ML Mountain Front Wheel	17	209,025
+product	0	817	HL Mountain Front Wheel	17	300,215
+product	0	818	LL Road Front Wheel	17	85,565
+product	0	819	ML Road Front Wheel	17	248,385
+product	0	820	HL Road Front Wheel	17	330,06
+product	0	821	Touring Front Wheel	17	218,01
+product	0	822	ML Road Frame-W - Yellow, 38	14	594,83
+product	0	823	LL Mountain Rear Wheel	17	87,745
+product	0	824	ML Mountain Rear Wheel	17	236,025
+product	0	825	HL Mountain Rear Wheel	17	327,215
+product	0	826	LL Road Rear Wheel	17	112,565
+product	0	827	ML Road Rear Wheel	17	275,385
+product	0	828	HL Road Rear Wheel	17	357,06
+product	0	829	Touring Rear Wheel	17	245,01
+product	0	830	ML Mountain Frame - Black, 40	12	348,76
+product	0	831	ML Mountain Frame - Black, 44	12	348,76
+product	0	832	ML Mountain Frame - Black, 48	12	348,76
+product	0	833	ML Road Frame-W - Yellow, 40	14	594,83
+product	0	834	ML Road Frame-W - Yellow, 42	14	594,83
+product	0	835	ML Road Frame-W - Yellow, 44	14	594,83
+product	0	836	ML Road Frame-W - Yellow, 48	14	594,83
+product	0	837	HL Road Frame - Black, 62	14	1431,50
+product	0	838	HL Road Frame - Black, 44	14	1431,50
+product	0	839	HL Road Frame - Black, 48	14	1431,50
+product	0	840	HL Road Frame - Black, 52	14	1431,50
+product	0	841	Men's Sports Shorts, S	22	59,99
+product	0	842	Touring-Panniers, Large	35	125,00
+product	0	843	Cable Lock	34	25,00
+product	0	844	Minipump	36	19,99
+product	0	845	Mountain Pump	36	24,99
+product	0	846	Taillights - Battery-Powered	33	13,99
+product	0	847	Headlights - Dual-Beam	33	34,99
+product	0	848	Headlights - Weatherproof	33	44,99
+product	0	849	Men's Sports Shorts, M	22	59,99
+product	0	850	Men's Sports Shorts, L	22	59,99
+product	0	851	Men's Sports Shorts, XL	22	59,99
+product	0	852	Women's Tights, S	24	74,99
+product	0	853	Women's Tights, M	24	74,99
+product	0	854	Women's Tights, L	24	74,99
+product	0	855	Men's Bib-Shorts, S	18	89,99
+product	0	856	Men's Bib-Shorts, M	18	89,99
+product	0	857	Men's Bib-Shorts, L	18	89,99
+product	0	858	Half-Finger Gloves, S	20	24,49
+product	0	859	Half-Finger Gloves, M	20	24,49
+product	0	860	Half-Finger Gloves, L	20	24,49
+product	0	861	Full-Finger Gloves, S	20	37,99
+product	0	862	Full-Finger Gloves, M	20	37,99
+product	0	863	Full-Finger Gloves, L	20	37,99
+product	0	864	Classic Vest, S	25	63,50
+product	0	865	Classic Vest, M	25	63,50
+product	0	866	Classic Vest, L	25	63,50
+product	0	867	Women's Mountain Shorts, S	22	69,99
+product	0	868	Women's Mountain Shorts, M	22	69,99
+product	0	869	Women's Mountain Shorts, L	22	69,99
+product	0	870	Water Bottle - 30 oz.	28	4,99
+product	0	871	Mountain Bottle Cage	28	9,99
+product	0	872	Road Bottle Cage	28	8,99
+product	0	873	Patch Kit/8 Patches	37	2,29
+product	0	874	Racing Socks, M	23	8,99
+product	0	875	Racing Socks, L	23	8,99
+product	0	876	Hitch Rack - 4-Bike	26	120,00
+product	0	877	Bike Wash - Dissolver	29	7,95
+product	0	878	Fender Set - Mountain	30	21,98
+product	0	879	All-Purpose Bike Stand	27	159,00
+product	0	880	Hydration Pack - 70 oz.	32	54,99
+product	0	881	Short-Sleeve Classic Jersey, S	21	53,99
+product	0	882	Short-Sleeve Classic Jersey, M	21	53,99
+product	0	883	Short-Sleeve Classic Jersey, L	21	53,99
+product	0	884	Short-Sleeve Classic Jersey, XL	21	53,99
+product	0	885	HL Touring Frame - Yellow, 60	16	1003,91
+product	0	886	LL Touring Frame - Yellow, 62	16	333,42
+product	0	887	HL Touring Frame - Yellow, 46	16	1003,91
+product	0	888	HL Touring Frame - Yellow, 50	16	1003,91
+product	0	889	HL Touring Frame - Yellow, 54	16	1003,91
+product	0	890	HL Touring Frame - Blue, 46	16	1003,91
+product	0	891	HL Touring Frame - Blue, 50	16	1003,91
+product	0	892	HL Touring Frame - Blue, 54	16	1003,91
+product	0	893	HL Touring Frame - Blue, 60	16	1003,91
+product	0	894	Rear Derailleur	9	121,46
+product	0	895	LL Touring Frame - Blue, 50	16	333,42
+product	0	896	LL Touring Frame - Blue, 54	16	333,42
+product	0	897	LL Touring Frame - Blue, 58	16	333,42
+product	0	898	LL Touring Frame - Blue, 62	16	333,42
+product	0	899	LL Touring Frame - Yellow, 44	16	333,42
+product	0	900	LL Touring Frame - Yellow, 50	16	333,42
+product	0	901	LL Touring Frame - Yellow, 54	16	333,42
+product	0	902	LL Touring Frame - Yellow, 58	16	333,42
+product	0	903	LL Touring Frame - Blue, 44	16	333,42
+product	0	904	ML Mountain Frame-W - Silver, 40	12	364,09
+product	0	905	ML Mountain Frame-W - Silver, 42	12	364,09
+product	0	906	ML Mountain Frame-W - Silver, 46	12	364,09
+product	0	907	Rear Brakes	6	106,50
+product	0	908	LL Mountain Seat/Saddle	15	27,12
+product	0	909	ML Mountain Seat/Saddle	15	39,14
+product	0	910	HL Mountain Seat/Saddle	15	52,64
+product	0	911	LL Road Seat/Saddle	15	27,12
+product	0	912	ML Road Seat/Saddle	15	39,14
+product	0	913	HL Road Seat/Saddle	15	52,64
+product	0	914	LL Touring Seat/Saddle	15	27,12
+product	0	915	ML Touring Seat/Saddle	15	39,14
+product	0	916	HL Touring Seat/Saddle	15	52,64
+product	0	917	LL Mountain Frame - Silver, 42	12	264,05
+product	0	918	LL Mountain Frame - Silver, 44	12	264,05
+product	0	919	LL Mountain Frame - Silver, 48	12	264,05
+product	0	920	LL Mountain Frame - Silver, 52	12	264,05
+product	0	921	Mountain Tire Tube	37	4,99
+product	0	922	Road Tire Tube	37	3,99
+product	0	923	Touring Tire Tube	37	4,99
+product	0	924	LL Mountain Frame - Black, 42	12	249,79
+product	0	925	LL Mountain Frame - Black, 44	12	249,79
+product	0	926	LL Mountain Frame - Black, 48	12	249,79
+product	0	927	LL Mountain Frame - Black, 52	12	249,79
+product	0	928	LL Mountain Tire	37	24,99
+product	0	929	ML Mountain Tire	37	29,99
+product	0	930	HL Mountain Tire	37	35,00
+product	0	931	LL Road Tire	37	21,49
+product	0	932	ML Road Tire	37	24,99
+product	0	933	HL Road Tire	37	32,60
+product	0	934	Touring Tire	37	28,99
+product	0	935	LL Mountain Pedal	13	40,49
+product	0	936	ML Mountain Pedal	13	62,09
+product	0	937	HL Mountain Pedal	13	80,99
+product	0	938	LL Road Pedal	13	40,49
+product	0	939	ML Road Pedal	13	62,09
+product	0	940	HL Road Pedal	13	80,99
+product	0	941	Touring Pedal	13	80,99
+product	0	942	ML Mountain Frame-W - Silver, 38	12	364,09
+product	0	943	LL Mountain Frame - Black, 40	12	249,79
+product	0	944	LL Mountain Frame - Silver, 40	12	264,05
+product	0	945	Front Derailleur	9	91,49
+product	0	946	LL Touring Handlebars	4	46,09
+product	0	947	HL Touring Handlebars	4	91,57
+product	0	948	Front Brakes	6	106,50
+product	0	949	LL Crankset	8	175,49
+product	0	950	ML Crankset	8	256,49
+product	0	951	HL Crankset	8	404,99
+product	0	952	Chain	7	20,24
+product	0	953	Touring-2000 Blue, 60	3	1214,85
+product	0	954	Touring-1000 Yellow, 46	3	2384,07
+product	0	955	Touring-1000 Yellow, 50	3	2384,07
+product	0	956	Touring-1000 Yellow, 54	3	2384,07
+product	0	957	Touring-1000 Yellow, 60	3	2384,07
+product	0	958	Touring-3000 Blue, 54	3	742,35
+product	0	959	Touring-3000 Blue, 58	3	742,35
+product	0	960	Touring-3000 Blue, 62	3	742,35
+product	0	961	Touring-3000 Yellow, 44	3	742,35
+product	0	962	Touring-3000 Yellow, 50	3	742,35
+product	0	963	Touring-3000 Yellow, 54	3	742,35
+product	0	964	Touring-3000 Yellow, 58	3	742,35
+product	0	965	Touring-3000 Yellow, 62	3	742,35
+product	0	966	Touring-1000 Blue, 46	3	2384,07
+product	0	967	Touring-1000 Blue, 50	3	2384,07
+product	0	968	Touring-1000 Blue, 54	3	2384,07
+product	0	969	Touring-1000 Blue, 60	3	2384,07
+product	0	970	Touring-2000 Blue, 46	3	1214,85
+product	0	971	Touring-2000 Blue, 50	3	1214,85
+product	0	972	Touring-2000 Blue, 54	3	1214,85
+product	0	973	Road-350-W Yellow, 40	2	1700,99
+product	0	974	Road-350-W Yellow, 42	2	1700,99
+product	0	975	Road-350-W Yellow, 44	2	1700,99
+product	0	976	Road-350-W Yellow, 48	2	1700,99
+product	0	977	Road-750 Black, 58	2	539,99
+product	0	978	Touring-3000 Blue, 44	3	742,35
+product	0	979	Touring-3000 Blue, 50	3	742,35
+product	0	980	Mountain-400-W Silver, 38	1	769,49
+product	0	981	Mountain-400-W Silver, 40	1	769,49
+product	0	982	Mountain-400-W Silver, 42	1	769,49
+product	0	983	Mountain-400-W Silver, 46	1	769,49
+product	0	984	Mountain-500 Silver, 40	1	564,99
+product	0	985	Mountain-500 Silver, 42	1	564,99
+product	0	986	Mountain-500 Silver, 44	1	564,99
+product	0	987	Mountain-500 Silver, 48	1	564,99
+product	0	988	Mountain-500 Silver, 52	1	564,99
+product	0	989	Mountain-500 Black, 40	1	539,99
+product	0	990	Mountain-500 Black, 42	1	539,99
+product	0	991	Mountain-500 Black, 44	1	539,99
+product	0	992	Mountain-500 Black, 48	1	539,99
+product	0	993	Mountain-500 Black, 52	1	539,99
+product	0	994	LL Bottom Bracket	5	53,99
+product	0	995	ML Bottom Bracket	5	101,24
+product	0	996	HL Bottom Bracket	5	121,49
+product	0	997	Road-750 Black, 44	2	539,99
+product	0	998	Road-750 Black, 48	2	539,99
+product	999	999	Road-750 Black, 52	2	539,99

@@ -36,12 +36,12 @@ public class DevSimulatorSource extends BasePushSource {
     private final MultiTypeConfig multiTypeConfig;
     private final CsvConfig csvConfig;
 
-    private BufferedDataStreamFileReader bufferedDataStream = null;
+    private DataStreamFileReader dataStream = null;
 
     //    private long counter;
     private long maxWaitTime;
 
-    private long startTimestampMs = 0;
+    //private long startTimestampMs = 0;
 
     private boolean publishStartEventSent = false;
 
@@ -83,14 +83,15 @@ public class DevSimulatorSource extends BasePushSource {
         files = getAllFilesThatMatchFilenameExtension(basicConfig.filesDirectory, basicConfig.fileNamePattern, basicConfig.includeSubdirectories, basicConfig.pathMatcherMode);
         LOG.info("Using the following files " + files);
 
+        // set the machineStartTimestampMs to be the actual time + configurable delay
+        long machineStartTimestampMs = System.currentTimeMillis() + eventTimeConfig.delayMs;
+
         try {
-            bufferedDataStream = BufferedDataStreamFileReader.create()
+            dataStream = DataStreamFileReader.create()
                     .withContext(getContext())
                     .withConfig(basicConfig, eventTimeConfig, csvConfig, multiTypeConfig)
                     .withFiles(files)
-                    .withMinBufferSize(basicConfig.minBufferSize)
-                    .withMaxBufferSize(basicConfig.maxBufferSize);
-            bufferedDataStream.fillBuffer();
+                    .withTimestamps(machineStartTimestampMs);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -110,24 +111,6 @@ public class DevSimulatorSource extends BasePushSource {
 
     @Override
     public void produce(Map<String, String> map, int i) throws StageException {
-
-        //long deltaMs = 0;
-        long currentTimestampMs = System.currentTimeMillis();
-
-        // set the start timestamp and delta if RELATIVE timestamp mode
-        if (this.eventTimeConfig.timestampMode.equals(TimestampModeType.RELATIVE_FROM_ANCHOR)
-                || this.eventTimeConfig.timestampMode.equals(TimestampModeType.RELATIVE_FROM_PREVIOUS)) {
-            if (this.eventTimeConfig.anchorTimeNow) {
-                startTimestampMs = currentTimestampMs;
-            } else {
-                startTimestampMs = DateUtil.parseCustomFormat(eventTimeConfig.anchorTimestampDateFormat.getFormat(), eventTimeConfig.anchorTimestamp) * 1000;
-                //deltaMs = currentTimestampMs - startTimestampMs;
-            }
-        }
-
-        // set the machineStartTimestampMs to be the actual time + configurable delay
-        long machineStartTimestampMs = System.currentTimeMillis() + eventTimeConfig.delayMs;
-
         try {
             boolean cont = true;
             // Create new batch
@@ -139,10 +122,10 @@ public class DevSimulatorSource extends BasePushSource {
                         batchContext = getContext().startBatch();
 
                         // publish event for simulation start
-                        String eventRecordSourceId = Utils.format("event:{}", machineStartTimestampMs);
+                        String eventRecordSourceId = Utils.format("event:{}", dataStream.getMachineStartTimestampMs());
                         EventRecord eventRecord = getContext().createEventRecord("START", 1, eventRecordSourceId);
                         Map<String, Field> eventMap = new HashMap<>();
-                        eventMap.put("timestampMs", Field.create(machineStartTimestampMs));
+                        eventMap.put("timestampMs", Field.create(dataStream.getMachineStartTimestampMs()));
                         eventMap.put("event", Field.create("START"));
                         eventRecord.set(Field.create(eventMap));
                         batchContext.toEvent(eventRecord);
@@ -150,7 +133,7 @@ public class DevSimulatorSource extends BasePushSource {
                         batchContext = getContext().startBatch();
                     }
 
-                    cont = produceRecords(batchContext, machineStartTimestampMs);
+                    cont = produceRecords(batchContext, dataStream.getMachineStartTimestampMs());
 
                     // send the batch
                     getContext().processBatch(batchContext);
@@ -168,39 +151,14 @@ public class DevSimulatorSource extends BasePushSource {
         BatchMaker batchMaker = batchContext.getBatchMaker();
 
         try {
-            Map.Entry<Long, List<Record>> timestampWithRecords = bufferedDataStream.pollFromBuffer();
-            if (timestampWithRecords != null) {
-                long recordTimeMs = timestampWithRecords.getKey();
-                if (startTimestampMs == 0) {
-                    startTimestampMs = recordTimeMs;
-                }
-
-                for (Record record : timestampWithRecords.getValue()) {
+            List<Record> records = dataStream.read();
+            if (records != null) {
+                for (Record record : records) {
                     String outputLane = record.getHeader().getAttribute("_outputLane");
-                    long currentEventTimeMs = TimeUtil.generateTimestamp(System.currentTimeMillis(), machineStartTimestampMs, startTimestampMs, eventTimeConfig.speedup);
                     if (record != null) {
-                        long eventTimestampMs = 0;
-
-                        if (eventTimeConfig.timestampMode.equals(TimestampModeType.RELATIVE_FROM_ANCHOR)) {
-                            eventTimestampMs = startTimestampMs + recordTimeMs;
-                        } else if (eventTimeConfig.timestampMode.equals(TimestampModeType.RELATIVE_FROM_PREVIOUS)) {
-                            eventTimestampMs = startTimestampMs + recordTimeMs;
-                        } else if (eventTimeConfig.timestampMode.equals(TimestampModeType.ABSOLUTE)) {
-                            eventTimestampMs = recordTimeMs;
-                        } else if (eventTimeConfig.timestampMode.equals(TimestampModeType.FIXED)) {
-                            // t.b.d.
-                        }
-
-                        if (eventTimestampMs > currentEventTimeMs) {
-                            try {
-                                Thread.sleep(Math.max(eventTimestampMs - currentEventTimeMs, 0));
-                                //Thread.sleep(Math.max(eventTimestampMs - System.currentTimeMillis(), 0));
-                            } catch (InterruptedException e) {
-                                break;
-                            }
-                        }
 
                         // if a delay was used, send another event upon start of sending messages
+/*
                         if (eventTimeConfig.delayMs > 0 && !publishStartEventSent) {
                             String eventRecordSourceId = Utils.format("event:{}", eventTimestampMs);
                             EventRecord eventRecord = getContext().createEventRecord("publishing-start", 1, eventRecordSourceId);
@@ -211,10 +169,7 @@ public class DevSimulatorSource extends BasePushSource {
 
                             publishStartEventSent = true;
                         }
-
-                        record.set(eventTimeConfig.eventTimestampOutputField, Field.create(eventTimestampMs));
-                        //record.set("/StartEventTimestamp", Field.create(startTimestampMs));
-                        record.getHeader().setAttribute("startEventTimestamp", String.valueOf(startTimestampMs));
+*/
 
                         if (basicConfig.useMultiRecordType) {
                             batchMaker.addRecord(record, record.getHeader().getAttribute("_outputLane"));
