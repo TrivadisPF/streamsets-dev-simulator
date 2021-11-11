@@ -21,6 +21,7 @@ import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.TimestampModeType;
 import com.trivadis.streamsets.sdc.csv.CsvParser;
 import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -329,12 +330,15 @@ public class DataStreamFileReader {
                                 // determine the record time milliseconds
                                 long recordTimeMs = 0;
                                 if (eventTimeConfig.timestampMode.equals(TimestampModeType.RELATIVE_FROM_ANCHOR)) {
-                                    recordTimeMs = record.get(eventTimeConfig.timestampField).getValueAsLong() - eventTimeConfig.fastForwardToTimestamp;
+                                    String recordTimeMsString = record.get(eventTimeConfig.timestampField).getValueAsString();
+                                    recordTimeMs = Math.round(NumberUtils.toDouble(recordTimeMsString));
+                                    recordTimeMs = recordTimeMs - eventTimeConfig.fastForwardToTimestamp;
                                     if (eventTimeConfig.relativeTimeResolution.equals(RelativeTimeResolution.SECONDS)) {
                                         recordTimeMs = recordTimeMs * 1000;
                                     }
                                 } else if (eventTimeConfig.timestampMode.equals(TimestampModeType.RELATIVE_FROM_PREVIOUS)) {
-                                    recordTimeMs = record.get(eventTimeConfig.timestampField).getValueAsLong();
+                                    String recordTimeMsString = record.get(eventTimeConfig.timestampField).getValueAsString();
+                                    recordTimeMs = Math.round(NumberUtils.toDouble(recordTimeMsString));
 
                                     Long previousEventTime = previousTimestampMsPerOutputLane.containsKey(outputLane) ? previousTimestampMsPerOutputLane.get(outputLane) : 0;
                                     Long previousPlusEventTime = previousEventTime + recordTimeMs;
