@@ -15,10 +15,7 @@ import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.form
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.format.CsvHeader;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.format.CsvRecordType;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.multitype.MultiTypeConfig;
-import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.DateUtil;
-import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.EventTimeConfig;
-import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.RelativeTimeResolution;
-import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.TimestampModeType;
+import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.*;
 import com.trivadis.streamsets.sdc.csv.CsvParser;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -27,8 +24,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class DataStreamFileReader {
@@ -74,7 +69,6 @@ public class DataStreamFileReader {
     private PushSource.Context context;
 
     private int timestampPosition;
-    private SimpleDateFormat dateFormatter = null;
 
     private long lowestRecordTimeMs = Long.MAX_VALUE;
 
@@ -248,10 +242,6 @@ public class DataStreamFileReader {
         this.multiTypeConfig = multiTypeConfig;
         this.devSimulatorConfig = devSimulatorConfig;
 
-        if (eventTimeConfig.getDateMask() != null) {
-            dateFormatter = new SimpleDateFormat(eventTimeConfig.getDateMask());
-        }
-
         if (eventTimeConfig.timestampMode.equals(TimestampModeType.RELATIVE_FROM_PREVIOUS)) {
             previousTimestampMsPerOutputLane = new HashMap<>();
         }
@@ -276,9 +266,14 @@ public class DataStreamFileReader {
             if (this.eventTimeConfig.anchorTimeNow) {
                 startTimestampMs = currentTimestampMs;
             } else {
+                String timestampFormat = eventTimeConfig.anchorTimestampDateFormat != AnchorDateFormat.OTHER ? eventTimeConfig.anchorTimestampDateFormat.getFormat() : eventTimeConfig.anchorTimestampOtherDateFormat;
                 startTimestampMs = DateUtil.parseCustomFormat(eventTimeConfig.anchorTimestampDateFormat.getFormat(), eventTimeConfig.anchorTimestamp) * 1000;
                 //deltaMs = currentTimestampMs - startTimestampMs;
             }
+        } else if (this.eventTimeConfig.timestampMode.equals(TimestampModeType.ABSOLUTE_WITH_START)) {
+            String timestampFormat = eventTimeConfig.simulationStartTimestampDateFormat != SimulationStartDateFormat.OTHER ? eventTimeConfig.simulationStartTimestampDateFormat.getFormat() : eventTimeConfig.simulatorStartTimestampOtherDateFormat;
+            startTimestampMs = DateUtil.parseCustomFormat(timestampFormat, eventTimeConfig.simulationStartTimestamp) * 1000;
+            System.out.println ("startTimestampMs: " + startTimestampMs);
         }
 
         return this;
@@ -347,10 +342,11 @@ public class DataStreamFileReader {
                                     if (eventTimeConfig.relativeTimeResolution.equals(RelativeTimeResolution.SECONDS)) {
                                         recordTimeMs = previousPlusEventTime * 1000;
                                     }
-                                } else if (eventTimeConfig.timestampMode.equals(TimestampModeType.ABSOLUTE)) {
+                                } else if (eventTimeConfig.timestampMode.equals(TimestampModeType.ABSOLUTE) || eventTimeConfig.timestampMode.equals(TimestampModeType.ABSOLUTE_WITH_START)) {
                                     String absoluteTimeString = record.get(eventTimeConfig.timestampField).getValueAsString();
-                                    Date absoluteTime = dateFormatter.parse(absoluteTimeString);
-                                    recordTimeMs = absoluteTime.getTime();
+                                    recordTimeMs = DateUtil.parseCustomFormat(eventTimeConfig.getDateMask(), absoluteTimeString) * 1000;
+                                    System.out.println ("recordTimeMs: " + recordTimeMs);
+
                                 }
 
                                 csvParsers.get(key).record = record;
@@ -363,8 +359,6 @@ public class DataStreamFileReader {
                         }
                     }
 
-                } catch (ParseException e) {
-                    throw new StageException(Errors.DEV_SIMULATOR_002, e.toString(), e);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -417,6 +411,8 @@ public class DataStreamFileReader {
             eventTimestampMs = startTimestampMs + recordTimeMs;
         } else if (eventTimeConfig.timestampMode.equals(TimestampModeType.ABSOLUTE)) {
             eventTimestampMs = recordTimeMs;
+        } else if (eventTimeConfig.timestampMode.equals(TimestampModeType.ABSOLUTE_WITH_START)) {
+            eventTimestampMs = recordTimeMs;
         } else if (eventTimeConfig.timestampMode.equals(TimestampModeType.FIXED)) {
             // t.b.d.
         }
@@ -442,6 +438,8 @@ public class DataStreamFileReader {
         } else if (eventTimeConfig.timestampMode.equals(TimestampModeType.RELATIVE_FROM_PREVIOUS)) {
             eventTimestampMs = startTimestampMs + recordTimeMs;
         } else if (eventTimeConfig.timestampMode.equals(TimestampModeType.ABSOLUTE)) {
+            eventTimestampMs = recordTimeMs;
+        } else if (eventTimeConfig.timestampMode.equals(TimestampModeType.ABSOLUTE_WITH_START)) {
             eventTimestampMs = recordTimeMs;
         } else if (eventTimeConfig.timestampMode.equals(TimestampModeType.FIXED)) {
             // t.b.d.

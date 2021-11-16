@@ -45,8 +45,8 @@ public class TestDevSimulatorSource {
 
     DevSimulatorConfig basicConfig = new DevSimulatorConfig();
     basicConfig.fileNamePattern = ".+.csv";
-    basicConfig.minBufferSize = 10;
-    basicConfig.maxBufferSize = 100;
+    //basicConfig.minBufferSize = 10;
+    //basicConfig.maxBufferSize = 100;
     basicConfig.inputDataFormat = DataFormatType.AS_DELIMITED;
     basicConfig.includeSubdirectories = true;
     basicConfig.pathMatcherMode = PathMatcherMode.REGEX;

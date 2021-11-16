@@ -4,7 +4,7 @@ import com.streamsets.pipeline.api.GenerateResourceBundle;
 import com.streamsets.pipeline.api.Label;
 
 @GenerateResourceBundle
-public enum AnchorDateFormat implements Label {
+public enum SimulationStartDateFormat implements Label {
 
     HH_MM("HH:mm", "HH:mm"),
     HH_MM_SS("HH:mm:ss", "HH:mm:ss"),
@@ -19,7 +19,7 @@ public enum AnchorDateFormat implements Label {
     private final String format;
     private final String label;
 
-    private AnchorDateFormat(String format, String label) {
+    private SimulationStartDateFormat(String format, String label) {
         this.format = format;
         this.label = label;
     }

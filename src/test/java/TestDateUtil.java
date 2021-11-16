@@ -15,4 +15,15 @@ public class TestDateUtil {
         System.out.println(epoc);
     }
 
+    @Test
+    public void testWithDateAndTimeWithZ() {
+        long epoc = DateUtil.parseCustomFormat("yyyy-MM-dd'T'HH:mm:ssZ", "2021-01-02T20:00:00+0100");
+        System.out.println(epoc);
+    }
+
+    @Test
+    public void testWithDateAndTimeWithZ2() {
+        long epoc = DateUtil.parseCustomFormat("yyyy-MM-dd'T'HH:mm:ssZ", "2021-11-16T09:00:00+0100");
+        System.out.println(epoc);
+    }
 }

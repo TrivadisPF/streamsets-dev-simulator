@@ -30,7 +30,7 @@ public class EventTimeConfig {
             displayMode = ConfigDef.DisplayMode.BASIC,
             group = "EVENT_TIME",
             dependsOn = "timestampMode",
-            triggeredByValue = {"ABSOLUTE","RELATIVE_FROM_ANCHOR","RELATIVE_FROM_PREVIOUS"}
+            triggeredByValue = {"ABSOLUTE","ABSOLUTE_WITH_START", "RELATIVE_FROM_ANCHOR","RELATIVE_FROM_PREVIOUS"}
     )
     @FieldSelectorModel(singleValued = true)
     public String timestampField;
@@ -102,6 +102,44 @@ public class EventTimeConfig {
     )
     public String anchorTimestampOtherDateFormat;
 
+    @ConfigDef(
+            required = false,
+            type = ConfigDef.Type.STRING,
+            defaultValue = "",
+            label = "Simulation Start Timestamp",
+            displayPosition = 40,
+            description = "The timestamp to use as the simulation start time in the absolute mode.",
+            group = "EVENT_TIME",
+            dependsOn = "timestampMode",
+            triggeredByValue = {"ABSOLUTE_WITH_START"}
+    )
+    public String simulationStartTimestamp;
+
+    @ConfigDef(
+            required = false,
+            type = ConfigDef.Type.MODEL,
+            defaultValue="HH_MM_SS",
+            label = "Simulation Start Timestamp Format",
+            description="Select or enter any valid date or datetime format",
+            displayPosition = 45,
+            group = "EVENT_TIME",
+            dependsOn = "timestampMode",
+            triggeredByValue = {"ABSOLUTE_WITH_START"}
+    )
+    @ValueChooserModel(AnchorDateFormatChooserValues.class)
+    public SimulationStartDateFormat simulationStartTimestampDateFormat = SimulationStartDateFormat.HH_MM_SS;
+
+    @ConfigDef(
+            required = true,
+            type = ConfigDef.Type.STRING,
+            defaultValue = "",
+            label = "Other Simulation Start Timestamp Format",
+            displayPosition = 50,
+            group = "EVENT_TIME",
+            dependsOn = "simulationStartTimestampDateFormat",
+            triggeredByValue = "OTHER"
+    )
+    public String simulatorStartTimestampOtherDateFormat;
 
     @ConfigDef(
             required = true,
@@ -127,7 +165,7 @@ public class EventTimeConfig {
             displayMode = ConfigDef.DisplayMode.BASIC,
             group = "EVENT_TIME",
             dependsOn = "timestampMode",
-            triggeredByValue = {"ABSOLUTE"}
+            triggeredByValue = {"ABSOLUTE", "ABSOLUTE_WITH_START"}
     )
     @ValueChooserModel(TimestampDateFormatChooserValues.class)
     public TimestampDateFormat timestampDateFormat;

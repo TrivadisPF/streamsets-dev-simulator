@@ -54,7 +54,7 @@ public class TestBufferedDataStreamFileReader {
         EventTimeConfig eventTimeConfig = new EventTimeConfig();
 
         MultiTypeConfig multiTypeConfig = new MultiTypeConfig();
-
+/*
         BufferedDataStreamFileReader bdsfr = BufferedDataStreamFileReader.create()
 //                                                                .withContext(runner.getContext())
                                                                 .withConfig(devSimulatorConfig, eventTimeConfig, csvConfig, multiTypeConfig)
@@ -63,6 +63,8 @@ public class TestBufferedDataStreamFileReader {
         bdsfr.fillBuffer();
         Map.Entry<Long, List<Record>> entry = bdsfr.pollFromBuffer();
         System.out.println(entry);
+
+ */
     }
 
 /*
