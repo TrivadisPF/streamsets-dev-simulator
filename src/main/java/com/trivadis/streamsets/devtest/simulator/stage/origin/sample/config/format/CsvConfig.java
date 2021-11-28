@@ -178,6 +178,20 @@ public class CsvConfig {
     )
     public String nullConstant;
 
+    @ConfigDef(
+            required = true,
+            type = ConfigDef.Type.BOOLEAN,
+            defaultValue = "false",
+            label = "Remove Empty Fields",
+            description = "Remove empty fields (Checks if a CharSequence is empty, null or whitespace only)",
+            displayPosition = 440,
+            displayMode = ConfigDef.DisplayMode.ADVANCED,
+            group = "DATA_FORMAT",
+            dependsOn = "^basicConfig.inputDataFormat",
+            triggeredByValue = "AS_DELIMITED"
+    )
+    public boolean removeEmptyFields;
+
     /* Charset Related -- Shown last */
     @ConfigDef(
             required = true,

@@ -10,13 +10,23 @@ import java.time.temporal.ChronoField;
 import java.util.Locale;
 
 public class DateUtil {
+
     public static long  parseCustomFormat(String formatPattern, String dateTimeString) {
+        LocalDate today = LocalDate.now();
+
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern(formatPattern);
+        ZonedDateTime zdt = ZonedDateTime.parse(dateTimeString, dtf);
+
+        return zdt.toEpochSecond();
+    }
+
+    public static long parseCustomFormatToEpocMs(String formatPattern, String dateTimeString) {
         LocalDate today = LocalDate.now();
 
         DateTimeFormatter dtf  = DateTimeFormatter.ofPattern(formatPattern);
         ZonedDateTime zdt  = ZonedDateTime.parse(dateTimeString,dtf);
 
-        return zdt.toEpochSecond();
+        return zdt.toInstant().toEpochMilli();
 
     }
 }

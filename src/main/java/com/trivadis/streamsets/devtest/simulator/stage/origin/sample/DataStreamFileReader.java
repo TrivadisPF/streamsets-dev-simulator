@@ -5,7 +5,6 @@ import com.google.common.collect.ImmutableMap;
 import com.streamsets.pipeline.api.Field;
 import com.streamsets.pipeline.api.PushSource;
 import com.streamsets.pipeline.api.Record;
-import com.streamsets.pipeline.api.StageException;
 import com.streamsets.pipeline.api.impl.Utils;
 import com.streamsets.pipeline.api.service.dataformats.DataParserException;
 import com.streamsets.pipeline.api.service.dataformats.RecoverableDataParserException;
@@ -18,8 +17,8 @@ import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.mult
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.*;
 import com.trivadis.streamsets.sdc.csv.CsvParser;
 import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -104,27 +103,31 @@ public class DataStreamFileReader {
         if (csvConfig.csvRecordType == CsvRecordType.LIST) {
             List<Field> row = new ArrayList<>();
             for (int i = 0; i < columns.length; i++) {
-                Map<String, Field> cell = new HashMap<>();
-                Field header = (headers != null) ? headers.get(i) : null;
-                if (header != null) {
-                    cell.put("header", header);
+                if (!StringUtils.isBlank(columns[i]) || StringUtils.isBlank(columns[i]) && !csvConfig.removeEmptyFields) {
+                    Map<String, Field> cell = new HashMap<>();
+                    Field header = (headers != null) ? headers.get(i) : null;
+                    if (header != null) {
+                        cell.put("header", header);
+                    }
+                    Field value = getField(columns[i]);
+                    cell.put("value", value);
+                    row.add(Field.create(cell));
                 }
-                Field value = getField(columns[i]);
-                cell.put("value", value);
-                row.add(Field.create(cell));
             }
             record.set(Field.create(row));
         } else {
             LinkedHashMap<String, Field> listMap = new LinkedHashMap<>();
             for (int i = 0; i < columns.length; i++) {
-                String fieldKey;
-                Field header = (headers != null) ? headers.get(i) : null;
-                if (header != null) {
-                    fieldKey = header.getValueAsString();
-                } else {
-                    fieldKey = Integer.toString(i);
+                if (!StringUtils.isBlank(columns[i]) || StringUtils.isBlank(columns[i]) && !csvConfig.removeEmptyFields) {
+                    String fieldKey;
+                    Field header = (headers != null) ? headers.get(i) : null;
+                    if (header != null) {
+                        fieldKey = header.getValueAsString();
+                    } else {
+                        fieldKey = Integer.toString(i);
+                    }
+                    listMap.put(fieldKey, getField(columns[i]));
                 }
-                listMap.put(fieldKey, getField(columns[i]));
             }
             record.set(Field.createListMap(listMap));
         }
@@ -267,12 +270,12 @@ public class DataStreamFileReader {
                 startTimestampMs = currentTimestampMs;
             } else {
                 String timestampFormat = eventTimeConfig.anchorTimestampDateFormat != AnchorDateFormat.OTHER ? eventTimeConfig.anchorTimestampDateFormat.getFormat() : eventTimeConfig.anchorTimestampOtherDateFormat;
-                startTimestampMs = DateUtil.parseCustomFormat(eventTimeConfig.anchorTimestampDateFormat.getFormat(), eventTimeConfig.anchorTimestamp) * 1000;
+                startTimestampMs = DateUtil.parseCustomFormatToEpocMs(eventTimeConfig.anchorTimestampDateFormat.getFormat(), eventTimeConfig.anchorTimestamp);
                 //deltaMs = currentTimestampMs - startTimestampMs;
             }
         } else if (this.eventTimeConfig.timestampMode.equals(TimestampModeType.ABSOLUTE_WITH_START)) {
             String timestampFormat = eventTimeConfig.simulationStartTimestampDateFormat != SimulationStartDateFormat.OTHER ? eventTimeConfig.simulationStartTimestampDateFormat.getFormat() : eventTimeConfig.simulatorStartTimestampOtherDateFormat;
-            startTimestampMs = DateUtil.parseCustomFormat(timestampFormat, eventTimeConfig.simulationStartTimestamp) * 1000;
+            startTimestampMs = DateUtil.parseCustomFormatToEpocMs(timestampFormat, eventTimeConfig.simulationStartTimestamp);
             System.out.println ("startTimestampMs: " + startTimestampMs);
         }
 
@@ -344,9 +347,8 @@ public class DataStreamFileReader {
                                     }
                                 } else if (eventTimeConfig.timestampMode.equals(TimestampModeType.ABSOLUTE) || eventTimeConfig.timestampMode.equals(TimestampModeType.ABSOLUTE_WITH_START)) {
                                     String absoluteTimeString = record.get(eventTimeConfig.timestampField).getValueAsString();
-                                    recordTimeMs = DateUtil.parseCustomFormat(eventTimeConfig.getDateMask(), absoluteTimeString) * 1000;
-                                    System.out.println ("recordTimeMs: " + recordTimeMs);
-
+                                    recordTimeMs = DateUtil.parseCustomFormatToEpocMs(eventTimeConfig.getDateMask(), absoluteTimeString);
+                                    System.out.println("recordTimeMs: " + recordTimeMs);
                                 }
 
                                 csvParsers.get(key).record = record;
