@@ -152,7 +152,7 @@ public class DevSimulatorSource extends BasePushSource {
 
         try {
             List<Record> records = dataStream.read();
-            if (records != null) {
+            if (records != null && !records.isEmpty()) {
                 for (Record record : records) {
                     String outputLane = record.getHeader().getAttribute("_outputLane");
                     if (record != null) {
@@ -180,6 +180,9 @@ public class DevSimulatorSource extends BasePushSource {
                         return false;
                     }
                 }
+            } else {
+                LOG.info ("No more records found!");
+                return false;
             }
         } finally {
 
