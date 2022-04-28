@@ -384,7 +384,7 @@ public class DataStreamFileReader {
             hasMore = false;
             for (String key : csvParsers.keySet()) {
                 Item item = csvParsers.get(key);
-                if (item.recordTimeMs == lowestRecordTimeMs) {
+                if (item.record != null && item.recordTimeMs == lowestRecordTimeMs) {
                     hasMore = true;
                     // check if the record with the given recordTimeMs is applicable for publishing
                     if (isApplicable(item.record, item.recordTimeMs, currentEventTimeMs)) {
