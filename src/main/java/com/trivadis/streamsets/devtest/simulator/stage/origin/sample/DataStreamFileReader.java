@@ -348,7 +348,6 @@ public class DataStreamFileReader {
                                 } else if (eventTimeConfig.timestampMode.equals(TimestampModeType.ABSOLUTE) || eventTimeConfig.timestampMode.equals(TimestampModeType.ABSOLUTE_WITH_START)) {
                                     String absoluteTimeString = record.get(eventTimeConfig.timestampField).getValueAsString();
                                     recordTimeMs = DateUtil.parseCustomFormatToEpocMs(eventTimeConfig.getDateMask(), absoluteTimeString);
-                                    System.out.println("recordTimeMs: " + recordTimeMs);
                                 }
 
                                 csvParsers.get(key).record = record;
