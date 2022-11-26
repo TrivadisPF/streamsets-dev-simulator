@@ -330,7 +330,7 @@ public class DataStreamFileReader {
                                 if (eventTimeConfig.timestampMode.equals(TimestampModeType.RELATIVE_FROM_ANCHOR)) {
                                     String recordTimeMsString = record.get(eventTimeConfig.timestampField).getValueAsString();
                                     recordTimeMs = Math.round(NumberUtils.toDouble(recordTimeMsString));
-                                    recordTimeMs = recordTimeMs - eventTimeConfig.fastForwardToTimestamp;
+                                    recordTimeMs = recordTimeMs - eventTimeConfig.fastForwardInitialTimeSpan;
                                     if (eventTimeConfig.relativeTimeResolution.equals(RelativeTimeResolution.SECONDS)) {
                                         recordTimeMs = recordTimeMs * 1000;
                                     }
@@ -384,13 +384,19 @@ public class DataStreamFileReader {
             hasMore = false;
             for (String key : csvParsers.keySet()) {
                 Item item = csvParsers.get(key);
+
                 if (item.record != null && item.recordTimeMs == lowestRecordTimeMs) {
                     hasMore = true;
+
                     // check if the record with the given recordTimeMs is applicable for publishing
                     if (isApplicable(item.record, item.recordTimeMs, currentEventTimeMs)) {
                         result.add(item.record);
                         csvParsers.get(key).record = null;
                         csvParsers.get(key).recordTimeMs = Long.MAX_VALUE;
+                    } else {
+                        csvParsers.get(key).record = null;
+                        csvParsers.get(key).recordTimeMs = Long.MAX_VALUE;
+                        lowestRecordTimeMs = Long.MAX_VALUE;
                     }
                 }
             }
@@ -425,6 +431,22 @@ public class DataStreamFileReader {
 
         if (currentEventTimeMs - eventTimestampMs > 500)
             LOG.trace("Lag of > 1s: " + Long.toString(currentEventTimeMs - eventTimestampMs));
+
+
+        if ((eventTimeConfig.timestampMode.equals(TimestampModeType.ABSOLUTE_WITH_START) ||
+            eventTimeConfig.timestampMode.equals(TimestampModeType.ABSOLUTE))
+                    && eventTimestampMs < startTimestampMs) {
+            return false;
+        }
+
+        // skip records which are earlier than the time-span to fast forward to if the skipEarlierEvents is true
+        if ((eventTimeConfig.timestampMode.equals(TimestampModeType.RELATIVE_FROM_ANCHOR) ||
+                eventTimeConfig.timestampMode.equals(TimestampModeType.RELATIVE_FROM_PREVIOUS))
+                && eventTimeConfig.fastForwardByTimeSpan
+                && eventTimeConfig.skipEarlierEvents
+                && eventTimestampMs < startTimestampMs) {
+            return false;
+        }
 
         return (eventTimestampMs <= currentEventTimeMs);
     }

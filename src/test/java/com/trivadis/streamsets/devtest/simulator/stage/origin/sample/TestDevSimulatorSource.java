@@ -15,6 +15,7 @@
  */
 package com.trivadis.streamsets.devtest.simulator.stage.origin.sample;
 
+import _ss_com.streamsets.datacollector.main.RuntimeInfo;
 import _ss_com.streamsets.datacollector.util.Configuration;
 import com.streamsets.pipeline.api.Record;
 import com.streamsets.pipeline.sdk.PushSourceRunner;
@@ -27,6 +28,7 @@ import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.form
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.multitype.MultiTypeConfig;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.AnchorDateFormat;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.EventTimeConfig;
+import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.SimulationStartDateFormat;
 import com.trivadis.streamsets.devtest.simulator.stage.origin.sample.config.time.TimestampModeType;
 import org.junit.Test;
 
@@ -41,6 +43,9 @@ public class TestDevSimulatorSource {
   private PushSourceRunner runner;
   @Test
   public void testOrigin() throws Exception {
+    String sdcId = "0123456789-0123456789-0123456789";
+
+
     Configuration.setFileRefsBaseDir(new File("/Users/gus/workspace/git/trivadispf/streamsets-dev-simulator/src/test/resources"));
 
     DevSimulatorConfig basicConfig = new DevSimulatorConfig();
@@ -50,21 +55,22 @@ public class TestDevSimulatorSource {
     basicConfig.inputDataFormat = DataFormatType.AS_DELIMITED;
     basicConfig.includeSubdirectories = true;
     basicConfig.pathMatcherMode = PathMatcherMode.REGEX;
-    basicConfig.filesDirectory = "/Users/gus/workspace/git/trivadispf/streamsets-dev-simulator/src/test/resources/data/ball";
+    basicConfig.filesDirectory = "/Users/gus/workspace/git/trivadispf/streamsets-dev-simulator/src/test/resources/data";
 
     CsvConfig csvConfig = new CsvConfig();
     csvConfig.csvCustomDelimiter = ',';
-    csvConfig.csvHeader = CsvHeader.USE_HEADER;
+    csvConfig.csvHeader = CsvHeader.NO_HEADER;
 
     MultiTypeConfig multiTypeConfig = new MultiTypeConfig();
 
     EventTimeConfig eventTimeConfig = new EventTimeConfig();
-    eventTimeConfig.timestampField = "/Timestamp";
-    eventTimeConfig.timestampMode = TimestampModeType.RELATIVE_FROM_ANCHOR;
+    eventTimeConfig.timestampField = "/0";
+    eventTimeConfig.timestampMode = TimestampModeType.ABSOLUTE_WITH_START;
     eventTimeConfig.eventTimestampOutputField = "/EventTimestamp";
-    eventTimeConfig.anchorTimeNow = true;
-    eventTimeConfig.anchorTimestamp = "16:00:00";
-    eventTimeConfig.anchorTimestampDateFormat = AnchorDateFormat.HH_MM_SS;
+    eventTimeConfig.anchorTimestampDateFormat = AnchorDateFormat.YYYY_MM_DD_T_HH_MM_SS_Z;
+    eventTimeConfig.simulationStartTimestamp = "2021-11-16T09:00:06+0100";
+    eventTimeConfig.simulationStartTimestampDateFormat = SimulationStartDateFormat.YYYY_MM_DD_T_HH_MM_SS_Z;
+    eventTimeConfig.simulatorStartTimestampOtherDateFormat = "";
     eventTimeConfig.speedup = 1.0;
 
     DevSimulatorDSource origin = new DevSimulatorDSource();

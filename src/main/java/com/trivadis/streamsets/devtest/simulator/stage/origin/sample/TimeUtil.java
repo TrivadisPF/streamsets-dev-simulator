@@ -6,9 +6,9 @@ public class TimeUtil {
      *
      * @param currentMachineTimestampMs              Current machine timestamp (in ms) returned by the time provider
      * @param machineTimestampWhenStartingSimulationMs Machine timestamp (in ms) returned by the time provider when simulation starts
-     * @param simulationStartTimestampMs              Match timestamp (in ms) when the match started
+     * @param simulationStartTimestampMs              timestamp (in ms) when event to be simulated started
      * @param simulationSpeedup                    Speedup multiplier for the simulation
-     * @return Current soccer match timestamp (in ms)
+     * @return Current simulation event timestamp (in ms)
      */
     public static long generateTimestamp (long currentMachineTimestampMs
                                             , long machineTimestampWhenStartingSimulationMs

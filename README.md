@@ -156,9 +156,9 @@ File Name Pattern Mode | Syntax of the file name pattern, either **Wildcard** or
 
 Event Time Property | Description
 ------------- | -------------
-Timestamp Mode  | How to retrieve the timestamp of the message. Use:<br/><ul><li>**Absolute** - the value of the field specified in `Timestamp Field` is directly used as the timestamp of the message<li>**Relative from Anchor** - the value of field specified in `Timestamp Field` is used as a time delta to calculate the new event timestamp from the anchor timestamp specified in `Anchor Time is Now?` and `Anchor Time`.<li>**Relative from Previous Event** - the value of the field specified in `Timestamp Field` is used as a time delta to calculate the new event timestamp based on the timestamp of the previous event.<li>**Fixed** (not yet supported) - a fixed delta is used, specified by the `Fixed Time Delta` property.
+Timestamp Mode  | How to retrieve the timestamp of the message. Use:<br/><ul><li>**Absolute** - the value of the field specified in `Timestamp Field` is directly used as the timestamp of the message<br/><li>**Absolute with Start Timestamp** - <li>**Relative from Anchor** - the value of field specified in `Timestamp Field` is used as a time delta to calculate the new event timestamp from the anchor timestamp specified in `Anchor Time is Now?` and `Anchor Time`.<li>**Relative from Previous Event** - the value of the field specified in `Timestamp Field` is used as a time delta to calculate the new event timestamp based on the timestamp of the previous event.<li>**Fixed** (not yet supported) - a fixed delta is used, specified by the `Fixed Time Delta` property.
 Timestamp Field  | the field which holds the timestamp
-Relative Time Resoultion  | Format of the time resoultion in the field specified by `Timestamp Field`. Used when `Timestamp Mode` is set to **Relative from Anchor** or **Relative from Previous Event**
+Relative Time Resolution  | Format of the time resolution in the field specified by `Timestamp Field`. Used when `Timestamp Mode` is set to **Relative from Anchor** or **Relative from Previous Event**
 Timestamp Format  | Format of the timestamp in the field specified by `Timestamp Field`. Used to convert a date or datetime into an Unix epoch time, if not already so.
 Fixed Time Delta (ms) | A fixed Time Delta in milliseconds between each message (event), used when `Timestamp Mode` is set to **Fixed**
 Event Timestamp Output Field | Name of the field in the record to hold the calculated event timestamp. You can specify an existing field or a new field. If the field does not exist, Dev Simulator creates the field.
@@ -166,7 +166,8 @@ Anchor Time is Now? | Select this if the simulation should start at the current 
 Anchor Time | the anchor time, either as a time or datetime. 
 Anchor Timestamp Format | Format of the simulation start specified by the `Anchor Time` property.
 Other Anchor Timestamp Format | Use to enter a custom date format. For more information about creating a custom date format, see the [Oracle Java documentation](https://docs.oracle.com/javase/tutorial/i18n/format/simpleDateFormat.html).
-Fast forward to time | The time to skip to either in seconds or milliseconds depending on `Relative Time Resolution`. Used when `Timestamp Mode` is set to **Relative from Anchor** or **Relative from Previous Event**.
+Fast forward to time | The time to be fast forwarded to, either in seconds or milliseconds depending on `Relative Time Resolution`. Used when `Timestamp Mode` is set to **Relative from Anchor** or **Relative from Previous Event**. The events before the point to be fast forwarded to are sent, .
+Skip forward to time | .
 Delay Sending Messages | a delay in milliseconds the simulator should wait before it starts sending messages. 
 Speedup Factor | Speedup value for the match simulation (1.0 = normal speed, 0.1 = 10 times slower, 10.0 = 10 times faster)
 

@@ -133,7 +133,7 @@ public class DevSimulatorSource extends BasePushSource {
                         batchContext = getContext().startBatch();
                     }
 
-                    cont = produceRecords(batchContext, dataStream.getMachineStartTimestampMs());
+                    cont = produceRecords(batchContext);
 
                     // send the batch
                     getContext().processBatch(batchContext);
@@ -147,7 +147,7 @@ public class DevSimulatorSource extends BasePushSource {
 
     }
 
-    public boolean produceRecords(BatchContext batchContext, long machineStartTimestampMs) {
+    public boolean produceRecords(BatchContext batchContext) {
         BatchMaker batchMaker = batchContext.getBatchMaker();
 
         try {

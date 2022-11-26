@@ -197,18 +197,46 @@ public class EventTimeConfig {
 
     @ConfigDef(
             required = false,
-            type = ConfigDef.Type.NUMBER,
-            defaultValue = "0",
-            label = "Fast forward to time",
-            description = "Start at time (in seconds or milliseconds depending on Relative Time Resolution config setting) ",
-            displayPosition = 57,
+            type = ConfigDef.Type.BOOLEAN,
+            defaultValue = "false",
+            label = "Fast forward in data",
+            description = "Fast forward to a point in the data ",
+            displayPosition = 50,
             displayMode = ConfigDef.DisplayMode.ADVANCED,
             dependsOn = "timestampMode",
             triggeredByValue = {"RELATIVE_FROM_ANCHOR"},
             group = "EVENT_TIME"
     )
-    public long fastForwardToTimestamp;
+    public boolean fastForwardByTimeSpan;
 
+    @ConfigDef(
+            required = false,
+            type = ConfigDef.Type.NUMBER,
+            defaultValue = "0",
+            label = "Fast forward by time span",
+            description = "Fast forward by this time span (in seconds or milliseconds depending on Relative Time Resolution config setting) ",
+            displayPosition = 52,
+            displayMode = ConfigDef.DisplayMode.ADVANCED,
+            dependsOn = "fastForwardByTimeSpan",
+            triggeredByValue = "true",
+            group = "EVENT_TIME"
+    )
+    public long fastForwardInitialTimeSpan;
+
+    @ConfigDef(
+            required = false,
+            type = ConfigDef.Type.BOOLEAN,
+            defaultValue = "0",
+            label = "Skip initial time span",
+            description = "Skip the initial time span (in seconds or milliseconds depending on Relative Time Resolution config setting) ",
+            displayPosition = 54,
+            displayMode = ConfigDef.DisplayMode.ADVANCED,
+            dependsOn = "fastForwardByTimeSpan",
+            triggeredByValue = "true",
+            group = "EVENT_TIME"
+    )
+    public boolean skipEarlierEvents;
+    
     @ConfigDef(
             required = true,
             type = ConfigDef.Type.NUMBER,
