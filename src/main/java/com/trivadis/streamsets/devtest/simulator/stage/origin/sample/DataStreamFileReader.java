@@ -277,7 +277,11 @@ public class DataStreamFileReader {
             String timestampFormat = eventTimeConfig.simulationStartTimestampDateFormat != SimulationStartDateFormat.OTHER ? eventTimeConfig.simulationStartTimestampDateFormat.getFormat() : eventTimeConfig.simulatorStartTimestampOtherDateFormat;
             startTimestampMs = DateUtil.parseCustomFormatToEpocMs(timestampFormat, eventTimeConfig.simulationStartTimestamp);
             System.out.println ("startTimestampMs: " + startTimestampMs);
+        } else if (this.eventTimeConfig.timestampMode.equals(TimestampModeType.ABSOLUTE)) {
+            startTimestampMs = Long.MAX_VALUE;
         }
+
+        System.out.println ("startTimestampMs="+startTimestampMs);
 
         return this;
     }
@@ -348,11 +352,21 @@ public class DataStreamFileReader {
                                 } else if (eventTimeConfig.timestampMode.equals(TimestampModeType.ABSOLUTE) || eventTimeConfig.timestampMode.equals(TimestampModeType.ABSOLUTE_WITH_START)) {
                                     String absoluteTimeString = record.get(eventTimeConfig.timestampField).getValueAsString();
                                     recordTimeMs = DateUtil.parseCustomFormatToEpocMs(eventTimeConfig.getDateMask(), absoluteTimeString);
+                                    System.out.println("recordTimeMs=" + recordTimeMs);
                                 }
 
                                 csvParsers.get(key).record = record;
                                 csvParsers.get(key).recordTimeMs = recordTimeMs;
                                 lowestRecordTimeMs = Long.min(lowestRecordTimeMs, recordTimeMs);
+
+                                if (eventTimeConfig.timestampMode.equals(TimestampModeType.ABSOLUTE)) {
+                                    // if the startTimestampMs is not the lowest, assign it to the lowest
+                                    if (startTimestampMs > lowestRecordTimeMs) {
+                                        System.out.println("set starTimestampMs to lowestRecordTimeMs");
+                                        startTimestampMs = lowestRecordTimeMs;
+                                    }
+                                }
+
                             } else {
                                 csvParsers.get(key).record = null;
                                 csvParsers.get(key).recordTimeMs = Long.MAX_VALUE;
@@ -407,9 +421,12 @@ public class DataStreamFileReader {
     public boolean isApplicable(Record record, long recordTimeMs, long currentEventTimeMs) {
         //String outputLane = record.getHeader().getAttribute("_outputLane");
 
+        /*
         if (startTimestampMs == 0) {
+            System.out.println("set starTimestampMs to recordTimeMs");
             startTimestampMs = recordTimeMs;
         }
+        */
 
         long eventTimestampMs = 0;
         if (eventTimeConfig.timestampMode.equals(TimestampModeType.RELATIVE_FROM_ANCHOR)) {
@@ -425,7 +442,6 @@ public class DataStreamFileReader {
         }
 
         record.set(eventTimeConfig.eventTimestampOutputField, Field.create(eventTimestampMs));
-        //record.set("/StartEventTimestamp", Field.create(startTimestampMs));
         record.getHeader().setAttribute("startEventTimestamp", String.valueOf(startTimestampMs));
 
         if (currentEventTimeMs - eventTimestampMs > 500)
