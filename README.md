@@ -12,12 +12,15 @@ The origin generates record header attributes that enable you to use the origins
 
 The origin can generate events for an event stream. For more information about dataflow triggers and the event framework, see [Dataflow Triggers Overview](https://streamsets.com/documentation/datacollector/3.20.x/help/datacollector/UserGuide/Event_Handling/EventFramework-Title.html#concept_cph_5h4_lx).
 
+You can find examples of the **Dev Simulator** in a cookbook for the [Platys Modern Data Platform Stack](https://github.com/TrivadisPF/platys-modern-data-platform/blob/master/cookbooks/recipes/using-dev-simulator-origin/README.md).
+
 ## Timestamp Mode
 
-The simulator supports the follwing different modes
+The simulator supports the following different modes
   
-* **Absolute** - the timestamp field of each records holds an absoulte timestamp for when the record should be published
-* **Relative from Anchor** - the timestamp field of each record holds a duration (in milli-seconds or seconds) which is relative to an anchor which is set at the start of the simulation. The anchor can either be set to a fixed time or it can be set to the system wallclock time of when the simulator starts.
+* **Absolute** - the timestamp field of each record holds an absolute timestamp for when the record should be published
+* **Absolute with Start Timestamp** - the timestamp field of each record holds an absolute timestamp and you have to specify the start timestamp to use for the simulator (can be later than the first event in the file(s), causing these events to be skipped).
+* **Relative from Anchor** - the timestamp field of each record holds a duration (in milli-seconds or seconds) which is relative to an anchor which is set at the start of the simulation. The anchor can either be set to a fixed time or it can be set to the system wallclock time of when the simulator is started.
 * **Relative from Previous Event** - the timestamp field of each record hold a duration (in milli-seconds or seconds) which is relative to the previous event published before.
 
 ## Multi Record Types 
@@ -159,7 +162,7 @@ Event Time Property | Description
 Timestamp Mode  | How to retrieve the timestamp of the message. Use:<br/><ul><li>**Absolute** - the value of the field specified in `Timestamp Field` is directly used as the timestamp of the message<br/><li>**Absolute with Start Timestamp** - the value specified as the start timestamp is used as the start time for the simulator. All rows where the event timestamp column has a timestamp earlier will be skipped.<li>**Relative from Anchor** - the value of field specified in `Timestamp Field` is used as a time delta to calculate the new event timestamp from the anchor timestamp specified in `Anchor Time is Now?` and `Anchor Time`.<li>**Relative from Previous Event** - the value of the field specified in `Timestamp Field` is used as a time delta to calculate the new event timestamp based on the timestamp of the previous event.<li>**Fixed** (not yet supported) - a fixed delta is used, specified by the `Fixed Time Delta` property.
 Timestamp Field  | the field which holds the timestamp
 Relative Time Resolution  | Format of the time resolution in the field specified by `Timestamp Field`. Used when `Timestamp Mode` is set to **Relative from Anchor** or **Relative from Previous Event**
-Timestamp Format  | Format of the timestamp in the field specified by `Timestamp Field`. Used to convert a date or datetime into an Unix epoch time, if not already so.
+Timestamp Format  | Format of the timestamp in the field specified by `Timestamp Field`. Used to convert a date or datetime into a Unix epoch time, if not already so.
 Fixed Time Delta (ms) | A fixed Time Delta in milliseconds between each message (event), used when `Timestamp Mode` is set to **Fixed**
 Event Timestamp Output Field | Name of the field in the record to hold the calculated event timestamp. You can specify an existing field or a new field. If the field does not exist, Dev Simulator creates the field.
 Anchor Time is Now? | Select this if the simulation should start at the current system wallclock time. If unselected, the simulation start can be specified through the `Anchor Time` property. 
@@ -181,7 +184,7 @@ Descriminator field | the field in the record which is used to match the `Descri
 
 3. On the **Data Format** tab, configure the following properties:
 
-Data Fomrmat Property | Description
+Data Format Property | Description
 ------------- | -------------
 Input Data Format | Delimiter format type. Use one of the following options. 
 Delimiter Format Type | Delimiter character for a custom delimiter format. Select one of the available options or use Other to enter a custom character.
